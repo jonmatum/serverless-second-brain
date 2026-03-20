@@ -9,37 +9,38 @@ This file governs all Terraform code in this project. Every module, resource, an
 ## Project structure
 
 ```
-terraform/
+infra/
+  bootstrap/               → One-time Terraform state backend (S3 + DynamoDB lock)
   environments/
-    dev/main.tf          → Instantiates modules with dev values
-    dev/variables.tf     → Dev-specific variable declarations
-    dev/outputs.tf       → Dev outputs
-    dev/terraform.tfvars → Dev values (not committed for secrets)
-    prod/                → Same structure
+    dev/main.tf            → Instantiates modules with dev values
+    dev/variables.tf       → Dev-specific variable declarations
+    dev/outputs.tf         → Dev outputs
+    dev/terraform.tfvars   → Dev values (not committed for secrets)
+    prod/                  → Same structure
   modules/
-    dynamodb/            → Knowledge graph table + GSIs
-    s3/                  → Content bucket + frontend bucket
-    lambda/              → Reusable Lambda function module
-    api-gateway/         → REST API + routes + stages
-    step-functions/      → State machine definitions
-    eventbridge/         → Scheduler rules
-    sns/                 → Topics + subscriptions
-    cloudfront/          → Distribution + OAC + headers
-    agentcore/           → Gateway + Runtime + tool registrations
-    iam/                 → Roles + policies
-    monitoring/          → Dashboards + alarms + X-Ray
-  backend.tf             → S3 backend configuration
-  providers.tf           → AWS provider + version constraints
-  versions.tf            → Required provider versions
+    dynamodb/              → Knowledge graph table + GSIs
+    s3/                    → Content bucket + frontend bucket
+    lambda/                → Reusable Lambda function module
+    api-gateway/           → REST API + routes + stages
+    step-functions/        → State machine definitions
+    eventbridge/           → Scheduler rules
+    sns/                   → Topics + subscriptions
+    cloudfront/            → Distribution + OAC + headers
+    agentcore/             → Gateway + Runtime + tool registrations
+    iam/                   → Roles + policies
+    monitoring/            → Dashboards + alarms + X-Ray
+  backend.tf               → S3 backend configuration
+  providers.tf             → AWS provider + version constraints
+  versions.tf              → Required provider versions
 ```
 
 ## Naming convention
 
 All AWS resources use the pattern: `{project_name}-{environment}-{resource}`
 
-- `project_name`: from `var.project_name` (default: `SecondBrain`)
+- `project_name`: from `var.project_name` (default: `ssb`)
 - `environment`: from `var.environment` (default: `dev`)
-- Example: `SecondBrain-dev-KnowledgeGraph`, `SecondBrain-dev-Capture`
+- Example: `ssb-dev-knowledge-graph`, `ssb-dev-capture`
 
 ## Module interface rules
 
@@ -78,7 +79,7 @@ These variables make the system domain-agnostic:
 variable "project_name" {
   description = "Project name, prefixes all resources"
   type        = string
-  default     = "SecondBrain"
+  default     = "ssb"
 }
 
 variable "environment" {

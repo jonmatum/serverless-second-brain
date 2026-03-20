@@ -106,8 +106,8 @@ Full API spec: [`.kiro/steering/api-spec.md`](.kiro/steering/api-spec.md)
 | `list_nodes` | Graph | List nodes with filters |
 | `search` | Search | Semantic + keyword search |
 | `add_node` | Capture | Create a new knowledge node |
-| `connect_nodes` | Graph | Create an edge between nodes |
-| `flag_stale` | Graph | Mark a node for review |
+| `connect_nodes` | Capture | Create an edge between nodes |
+| `flag_stale` | Surfacing | Mark a node for review |
 
 Full MCP spec: [`.kiro/steering/mcp-tools.md`](.kiro/steering/mcp-tools.md)
 

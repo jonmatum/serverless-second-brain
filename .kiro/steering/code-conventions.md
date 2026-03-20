@@ -15,7 +15,7 @@ This file governs all application code (Lambda functions, scripts, utilities) in
 ## Project structure for Lambda code
 
 ```
-lambdas/
+src/
   shared/
     types.ts          → Shared TypeScript types (DynamoDB items, API responses)
     dynamodb.ts       → DynamoDB client + helpers (getNode, putNode, queryEdges)
@@ -23,28 +23,29 @@ lambdas/
     bedrock.ts        → Bedrock client + helpers (classify, embed)
     validation.ts     → Input validation (slug format, required fields)
     errors.ts         → Error types (ValidationError, NotFoundError, DuplicateError)
-  capture/
-    handler.ts        → Lambda entry point
-    classify.ts       → Bedrock classification logic
-    index.ts          → Export handler
-  search/
-    handler.ts        → Lambda entry point
-    similarity.ts     → Cosine similarity computation
-    index.ts
-  graph/
-    handler.ts        → Lambda entry point
-    builder.ts        → Graph construction from DynamoDB items
-    index.ts
-  surfacing/
-    handler.ts        → Lambda entry point
-    analyzers/        → One file per analysis type
-      stale-seeds.ts
-      orphan-nodes.ts
-      missing-connections.ts
-      promotion-candidates.ts
-      content-gaps.ts
-    digest.ts         → Compile findings into digest
-    index.ts
+  functions/
+    capture/
+      handler.ts      → Lambda entry point
+      classify.ts     → Bedrock classification logic
+      index.ts        → Export handler
+    search/
+      handler.ts      → Lambda entry point
+      similarity.ts   → Cosine similarity computation
+      index.ts
+    graph/
+      handler.ts      → Lambda entry point
+      builder.ts      → Graph construction from DynamoDB items
+      index.ts
+    surfacing/
+      handler.ts      → Lambda entry point
+      analyzers/      → One file per analysis type
+        stale-seeds.ts
+        orphan-nodes.ts
+        missing-connections.ts
+        promotion-candidates.ts
+        content-gaps.ts
+      digest.ts       → Compile findings into digest
+      index.ts
 ```
 
 ## TypeScript rules
