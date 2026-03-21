@@ -50,3 +50,25 @@ module "iam" {
   dynamodb_table_arn = module.dynamodb.table_arn
   s3_bucket_arn      = module.s3_content.bucket_arn
 }
+
+# --- Compute Layer ---
+
+module "capture_lambda" {
+  source        = "../../modules/lambda"
+  function_name = "${var.project_name}-${var.environment}-capture"
+  memory_size   = 512
+  timeout       = 30
+
+  environment_variables = {
+    TABLE_NAME       = module.dynamodb.table_name
+    BUCKET_NAME      = module.s3_content.bucket_name
+    BEDROCK_MODEL_ID = var.bedrock_model_id
+    ENVIRONMENT      = var.environment
+  }
+
+  policy_arns = [
+    module.iam.dynamodb_write_policy_arn,
+    module.iam.s3_write_policy_arn,
+    module.iam.bedrock_invoke_policy_arn,
+  ]
+}

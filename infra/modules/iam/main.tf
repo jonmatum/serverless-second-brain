@@ -116,3 +116,23 @@ output "s3_read_policy_arn" {
 output "s3_write_policy_arn" {
   value = aws_iam_policy.s3_write.arn
 }
+
+# Bedrock invoke — for Capture (classification) and Search (embeddings)
+resource "aws_iam_policy" "bedrock_invoke" {
+  name = "${var.project_name}-${var.environment}-bedrock-invoke"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["bedrock:InvokeModel"]
+        Resource = "arn:aws:bedrock:*::foundation-model/*"
+      }
+    ]
+  })
+}
+
+output "bedrock_invoke_policy_arn" {
+  value = aws_iam_policy.bedrock_invoke.arn
+}

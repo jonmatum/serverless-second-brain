@@ -1,0 +1,85 @@
+// DynamoDB item types — matches dynamodb-schema.md exactly
+
+export interface MetaItem {
+  PK: string;        // NODE#{slug}
+  SK: "META";
+  GSI2PK: string;    // STATUS#{status}
+  slug: string;
+  node_type: string;
+  status: "seed" | "growing" | "evergreen";
+  title: string;
+  title_es: string;
+  title_en: string;
+  summary_es: string;
+  summary_en: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  word_count_es?: number;
+  word_count_en?: number;
+}
+
+export interface EdgeItem {
+  PK: string;        // NODE#{slug}
+  SK: string;        // EDGE#{target}
+  edge_type: string;
+  weight: number;
+  created_at: string;
+  created_by: string;
+}
+
+export interface EmbedItem {
+  PK: string;        // NODE#{slug}
+  SK: "EMBED";
+  model: string;
+  dimensions: number;
+  vector: number[];
+  source_text: string;
+  generated_at: string;
+}
+
+export interface AuditItem {
+  PK: string;        // AUDIT#{timestamp}
+  SK: string;        // NODE#{slug}
+  action: "create" | "update" | "connect" | "flag";
+  actor: string;
+  changes: Record<string, unknown>;
+  ttl: number;
+}
+
+// API types — matches api-spec.md
+
+export interface CaptureRequest {
+  text: string;
+  url?: string;
+  type?: string;
+  language?: "es" | "en";
+}
+
+export interface CaptureResponse {
+  id: string;
+  slug: string;
+  node_type: string;
+  status: "seed";
+  title: string;
+  title_es: string;
+  title_en: string;
+  summary_es: string;
+  summary_en: string;
+  tags: string[];
+  concepts: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+// Bedrock classification output
+export interface ClassificationResult {
+  title: string;
+  title_es: string;
+  title_en: string;
+  summary_es: string;
+  summary_en: string;
+  tags: string[];
+  concepts: string[];
+}

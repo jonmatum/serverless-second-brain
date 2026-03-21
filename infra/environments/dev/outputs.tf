@@ -39,3 +39,20 @@ output "s3_read_policy_arn" {
 output "s3_write_policy_arn" {
   value = module.iam.s3_write_policy_arn
 }
+
+output "bedrock_invoke_policy_arn" {
+  value = module.iam.bedrock_invoke_policy_arn
+}
+
+# Compute layer
+output "capture_function_name" {
+  value = module.capture_lambda.function_name
+}
+
+output "capture_function_arn" {
+  value = module.capture_lambda.function_arn
+}
+
+output "capture_invoke_arn" {
+  value = module.capture_lambda.invoke_arn
+}
