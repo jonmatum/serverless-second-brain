@@ -146,3 +146,11 @@ output "flag_function_name" {
 output "dashboard_url" {
   value = module.monitoring.dashboard_url
 }
+
+output "agentcore_runtime_id" {
+  value = module.agentcore_runtime.runtime_id
+}
+
+output "agentcore_runtime_arn" {
+  value = module.agentcore_runtime.runtime_arn
+}

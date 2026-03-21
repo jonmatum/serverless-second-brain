@@ -488,3 +488,68 @@ module "monitoring" {
   api_gateway_stage   = var.environment
   state_machine_name  = "${var.project_name}-${var.environment}-capture-pipeline"
 }
+
+# --- Phase 3: AgentCore Runtime (#8) ---
+
+resource "aws_iam_role" "agentcore_runtime" {
+  name = "${var.project_name}-${var.environment}-agentcore-runtime"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "bedrock-agentcore.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "agentcore_runtime_lambda" {
+  name = "lambda-invoke"
+  role = aws_iam_role.agentcore_runtime.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "lambda:InvokeFunction"
+      Resource = [
+        module.graph_lambda.function_arn,
+        module.search_lambda.function_arn,
+        module.capture_lambda.function_arn,
+        module.connect_lambda.function_arn,
+        module.flag_lambda.function_arn,
+      ]
+    }]
+  })
+}
+
+resource "aws_s3_object" "runtime_code" {
+  bucket = module.s3_content.bucket_name
+  key    = "runtime/mcp-server.zip"
+  source = data.archive_file.runtime_code.output_path
+  etag   = data.archive_file.runtime_code.output_md5
+}
+
+data "archive_file" "runtime_code" {
+  type        = "zip"
+  source_dir  = "${path.module}/../../../src/runtime"
+  output_path = "${path.module}/runtime.zip"
+}
+
+module "agentcore_runtime" {
+  source = "../../modules/agentcore-runtime"
+
+  runtime_name = "${var.project_name}_${var.environment}_runtime"
+  role_arn     = aws_iam_role.agentcore_runtime.arn
+  s3_bucket    = module.s3_content.bucket_name
+  s3_key       = "runtime/mcp-server.zip"
+
+  environment_variables = {
+    PROJECT_NAME = var.project_name
+    ENVIRONMENT  = var.environment
+    AWS_REGION   = var.aws_region
+  }
+
+  depends_on = [aws_s3_object.runtime_code]
+}
