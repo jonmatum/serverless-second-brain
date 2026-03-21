@@ -1,6 +1,6 @@
 import type { GraphResponse, SearchResponse, NodeResponse } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "";
+const API = import.meta.env.VITE_API_URL ?? "";
 
 async function get<T>(path: string, token?: string | null): Promise<T> {
   const headers: Record<string, string> = {};

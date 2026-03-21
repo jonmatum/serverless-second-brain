@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { t, type DictKey } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
@@ -27,7 +25,7 @@ export default function Home() {
       </div>
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((c) => (
-          <Link key={c.href} href={c.href}>
+          <Link key={c.href} to={c.href}>
             <Card className="h-full transition hover:border-border/80 hover:bg-accent/50">
               <CardContent className="p-4 sm:p-5">
                 <h2 className="font-semibold">{t(c.titleKey, locale)}</h2>

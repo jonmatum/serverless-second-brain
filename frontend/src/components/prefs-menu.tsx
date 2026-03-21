@@ -1,4 +1,3 @@
-"use client";
 
 import { Settings, Sun, Moon, Maximize, Minimize, Languages } from "lucide-react";
 import {

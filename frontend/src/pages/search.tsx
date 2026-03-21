@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import type { SearchResponse } from "@/lib/types";
@@ -22,79 +20,41 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const search = useCallback(
-    async (q: string) => {
-      if (!q.trim()) return;
-      setLoading(true);
-      setError("");
-      try {
-        setData(await api.search(q, { type: type || undefined, status: status || undefined, limit: 20 }));
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Error");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [type, status],
-  );
+  const search = useCallback(async (q: string) => {
+    if (!q.trim()) return;
+    setLoading(true); setError("");
+    try {
+      setData(await api.search(q, { type: type || undefined, status: status || undefined, limit: 20 }));
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Error"); }
+    finally { setLoading(false); }
+  }, [type, status]);
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">{t("search.title", locale)}</h1>
-
       <form onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("search.placeholder", locale)}
-            aria-label={t("search.title", locale)}
-            className="pl-9"
-          />
+          <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search.placeholder", locale)} aria-label={t("search.title", locale)} className="pl-9" />
         </div>
-        <Button type="submit" disabled={loading}>
-          {loading ? "\u2026" : t("search.button", locale)}
-        </Button>
+        <Button type="submit" disabled={loading}>{loading ? "\u2026" : t("search.button", locale)}</Button>
       </form>
-
       <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
-
       {error && <p className="text-destructive">{error}</p>}
-
       {data && (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            {t("search.results", locale, { count: data.total, s: data.total !== 1 ? "s" : "", ms: data.took_ms })}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("search.results", locale, { count: data.total, s: data.total !== 1 ? "s" : "", ms: data.took_ms })}</p>
           {data.results.map((r) => (
-            <NodeCard
-              key={r.id}
-              id={r.id}
-              title={r.title}
-              summary={localized(r, "summary", locale)}
-              node_type={r.node_type}
-              status={r.status}
-              tags={r.tags}
-              score={r.score}
-            />
+            <NodeCard key={r.id} id={r.id} title={r.title} summary={localized(r, "summary", locale)} node_type={r.node_type} status={r.status} tags={r.tags} score={r.score} />
           ))}
-          {data.total === 0 && (
-            <p className="text-muted-foreground">{t("search.no_results", locale, { q: data.query })}</p>
-          )}
+          {data.total === 0 && <p className="text-muted-foreground">{t("search.no_results", locale, { q: data.query })}</p>}
         </div>
       )}
-
       {!data && !loading && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">{t("search.suggestions", locale)}</p>
           <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => (
-              <Button key={s} variant="outline" size="sm" onClick={() => { setQuery(s); search(s); }}>
-                {s}
-              </Button>
-            ))}
+            {SUGGESTIONS.map((s) => <Button key={s} variant="outline" size="sm" onClick={() => { setQuery(s); search(s); }}>{s}</Button>)}
           </div>
         </div>
       )}

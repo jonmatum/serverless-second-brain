@@ -1,5 +1,3 @@
-"use client";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { t, typeLabel, statusLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
@@ -24,9 +22,7 @@ export function Filters({ type, status, onTypeChange, onStatusChange }: Props) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="_all">{t("filter.all_types", locale)}</SelectItem>
-          {TYPES.map((tp) => (
-            <SelectItem key={tp} value={tp}>{typeLabel(tp, locale)}</SelectItem>
-          ))}
+          {TYPES.map((tp) => <SelectItem key={tp} value={tp}>{typeLabel(tp, locale)}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={status || "_all"} onValueChange={(v: string | null) => onStatusChange(!v || v === "_all" ? "" : v)}>
@@ -35,9 +31,7 @@ export function Filters({ type, status, onTypeChange, onStatusChange }: Props) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="_all">{t("filter.all_statuses", locale)}</SelectItem>
-          {STATUSES.map((st) => (
-            <SelectItem key={st} value={st}>{statusLabel(st, locale)}</SelectItem>
-          ))}
+          {STATUSES.map((st) => <SelectItem key={st} value={st}>{statusLabel(st, locale)}</SelectItem>)}
         </SelectContent>
       </Select>
     </div>
