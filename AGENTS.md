@@ -105,7 +105,7 @@ Real data at 178 nodes: [`docs/benchmarks/results.md`](docs/benchmarks/results.m
   → #12 Benchmarks, #13 Domain Config, #14 Observability (cross-cutting)
 ```
 
-All issues above are closed. Open: #17 (OAuth/Cognito), #18 (Reasoning agent).
+All issues above are closed. Open: #17 (OAuth/Cognito), #18 (Reasoning agent), #20 (Graph S3 snapshot), #21 (Bedrock throttle monitoring), #22 (Frontend scaffold), #23 (Knowledge graph UI), #24 (Cognito login + capture), #25 (Remove API key infra).
 
 ## Code conventions
 
