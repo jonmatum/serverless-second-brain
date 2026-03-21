@@ -1,4 +1,3 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { t, typeLabel, statusLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 
@@ -16,24 +15,16 @@ export function Filters({ type, status, onTypeChange, onStatusChange }: Props) {
   const { locale } = usePrefs();
   return (
     <div className="flex flex-wrap gap-3">
-      <Select value={type || "_all"} onValueChange={(v: string | null) => onTypeChange(!v || v === "_all" ? "" : v)}>
-        <SelectTrigger className="w-full sm:w-[160px]" aria-label={t("filter.type", locale)}>
-          <SelectValue placeholder={t("filter.all_types", locale)} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="_all">{t("filter.all_types", locale)}</SelectItem>
-          {TYPES.map((tp) => <SelectItem key={tp} value={tp}>{typeLabel(tp, locale)}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Select value={status || "_all"} onValueChange={(v: string | null) => onStatusChange(!v || v === "_all" ? "" : v)}>
-        <SelectTrigger className="w-full sm:w-[160px]" aria-label={t("filter.status", locale)}>
-          <SelectValue placeholder={t("filter.all_statuses", locale)} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="_all">{t("filter.all_statuses", locale)}</SelectItem>
-          {STATUSES.map((st) => <SelectItem key={st} value={st}>{statusLabel(st, locale)}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <select value={type || "_all"} onChange={(e) => onTypeChange(e.target.value === "_all" ? "" : e.target.value)} aria-label={t("filter.type", locale)}
+        className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none sm:w-auto">
+        <option value="_all">{t("filter.all_types", locale)}</option>
+        {TYPES.map((tp) => <option key={tp} value={tp}>{typeLabel(tp, locale)}</option>)}
+      </select>
+      <select value={status || "_all"} onChange={(e) => onStatusChange(e.target.value === "_all" ? "" : e.target.value)} aria-label={t("filter.status", locale)}
+        className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none sm:w-auto">
+        <option value="_all">{t("filter.all_statuses", locale)}</option>
+        {STATUSES.map((st) => <option key={st} value={st}>{statusLabel(st, locale)}</option>)}
+      </select>
     </div>
   );
 }

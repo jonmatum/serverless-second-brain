@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { GraphNode } from "@/lib/types";
 import { NodeCard } from "@/components/node-card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { t, typeLabel, statusLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 
@@ -31,36 +30,32 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
     <div className="space-y-5">
       <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-bold">{typeLabel(nodeType, locale)}s</h1>
-          {!loading && <span className="text-sm text-muted-foreground">{sorted.length}</span>}
+          <h1 className="text-2xl font-semibold">{typeLabel(nodeType, locale)}s</h1>
+          {!loading && <span className="text-sm text-[var(--color-muted)]">{sorted.length}</span>}
         </div>
         <div className="flex items-center gap-2">
-          <Select value={status || "_all"} onValueChange={(v: string | null) => setStatus(!v || v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[130px]" aria-label={t("filter.status", locale)}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("filter.all_statuses", locale)}</SelectItem>
-              {STATUSES.map((st) => <SelectItem key={st} value={st}>{statusLabel(st, locale)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={sort} onValueChange={(v: string | null) => v && setSort(v as "edges" | "title")}>
-            <SelectTrigger className="w-[140px]" aria-label={t("listing.sort", locale)}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="edges">{t("listing.sort.edges", locale)}</SelectItem>
-              <SelectItem value="title">{t("listing.sort.alpha", locale)}</SelectItem>
-            </SelectContent>
-          </Select>
+          <select value={status || "_all"} onChange={(e) => setStatus(e.target.value === "_all" ? "" : e.target.value)} aria-label={t("filter.status", locale)}
+            className="rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none">
+            <option value="_all">{t("filter.all_statuses", locale)}</option>
+            {STATUSES.map((st) => <option key={st} value={st}>{statusLabel(st, locale)}</option>)}
+          </select>
+          <select value={sort} onChange={(e) => setSort(e.target.value as "edges" | "title")} aria-label={t("listing.sort", locale)}
+            className="rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-1.5 text-sm outline-none">
+            <option value="edges">{t("listing.sort.edges", locale)}</option>
+            <option value="title">{t("listing.sort.alpha", locale)}</option>
+          </select>
         </div>
       </div>
 
       {loading ? (
-        <p className="py-12 text-center text-muted-foreground">{t("common.loading", locale)}</p>
+        <p className="py-12 text-center text-[var(--color-muted)]">{t("common.loading", locale)}</p>
       ) : sorted.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">{t("listing.empty", locale)}</p>
+        <p className="py-12 text-center text-[var(--color-muted)]">{t("listing.empty", locale)}</p>
       ) : (
         <div className="space-y-2">
           {sorted.map((n) => (
             <NodeCard key={n.id} id={n.id} title={n.title} node_type={n.node_type} status={n.status} tags={n.tags}
-              extra={<span className="ml-auto text-xs text-muted-foreground">{n.edge_count}</span>} />
+              extra={<span className="ml-auto text-xs text-[var(--color-muted)]">{n.edge_count}</span>} />
           ))}
         </div>
       )}
