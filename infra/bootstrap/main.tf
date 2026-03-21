@@ -135,8 +135,16 @@ resource "aws_iam_role_policy" "github_actions" {
           "cloudfront:*",
           "bedrock:*",
           "bedrock-agentcore:*",
-          "sagemaker:*"
-        ]
+          "sagemaker:*",
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+          "ssm:PutParameter",
+          "ssm:DeleteParameter",
+          "ssm:AddTagsToResource",
+          "ssm:ListTagsForResource",
+          "ssm:RemoveTagsFromResource",
+          "cognito-idp:*"        ]
         Resource = "*"
       },
       {
