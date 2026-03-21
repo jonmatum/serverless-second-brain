@@ -177,6 +177,8 @@ resource "aws_api_gateway_integration_response" "health_200" {
       timestamp = "$context.requestTime"
     })
   }
+
+  depends_on = [aws_api_gateway_integration.health_mock]
 }
 
 # ─── /capture (Step Functions sync) ───
@@ -247,6 +249,8 @@ resource "aws_api_gateway_integration_response" "capture_201" {
   response_templates = {
     "application/json" = "$util.parseJson($input.json('$.output'))"
   }
+
+  depends_on = [aws_api_gateway_integration.capture_sfn]
 }
 
 # 400/500 — failure (extract error from Step Functions response)
@@ -285,7 +289,7 @@ $cause
 EOF
   }
 
-  depends_on = [aws_api_gateway_integration_response.capture_201]
+  depends_on = [aws_api_gateway_integration.capture_sfn, aws_api_gateway_integration_response.capture_201]
 }
 
 # ─── /search (Lambda proxy) ───
@@ -446,6 +450,8 @@ resource "aws_api_gateway_integration_response" "capture_options_200" {
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'${var.cors_allow_origin}'"
   }
+
+  depends_on = [aws_api_gateway_integration.capture_options]
 }
 
 # ─── CORS (OPTIONS) for /health ───
@@ -496,6 +502,8 @@ resource "aws_api_gateway_integration_response" "health_options_200" {
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'${var.cors_allow_origin}'"
   }
+
+  depends_on = [aws_api_gateway_integration.health_options]
 }
 
 # ─── Deployment + Stage ───
