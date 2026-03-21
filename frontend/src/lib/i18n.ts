@@ -25,6 +25,8 @@ const dict = {
   "home.essays.desc": { es: "Ensayos publicados", en: "Published essays" },
   "home.timeline": { es: "Cronolog\u00eda", en: "Timeline" },
   "home.timeline.desc": { es: "Vista cronol\u00f3gica", en: "Chronological view" },
+  "home.capture": { es: "Capturar", en: "Capture" },
+  "home.capture.desc": { es: "Ingestar nuevo conocimiento", en: "Ingest new knowledge" },
 
   // Types
   "type.concept": { es: "Concepto", en: "Concept" },
@@ -99,6 +101,25 @@ const dict = {
   "common.loading": { es: "Cargando\u2026", en: "Loading\u2026" },
   "common.error": { es: "Error: {msg}", en: "Error: {msg}" },
   "footer": { es: "Serverless Second Brain \u00b7 Powered by AWS", en: "Serverless Second Brain \u00b7 Powered by AWS" },
+
+  // Auth
+  "auth.login": { es: "Iniciar sesi\u00f3n", en: "Log in" },
+  "auth.logout": { es: "Cerrar sesi\u00f3n", en: "Log out" },
+
+  // Capture
+  "capture.title": { es: "Capturar", en: "Capture" },
+  "capture.login_required": { es: "Inicia sesi\u00f3n para capturar conocimiento.", en: "Log in to capture knowledge." },
+  "capture.text_label": { es: "Texto", en: "Text" },
+  "capture.text_placeholder": { es: "Pega o escribe el contenido a capturar (m\u00ednimo 50 caracteres)\u2026", en: "Paste or type content to capture (minimum 50 characters)\u2026" },
+  "capture.char_count": { es: "{count} caracteres (m\u00ednimo 50)", en: "{count} characters (minimum 50)" },
+  "capture.url_label": { es: "URL de origen (opcional)", en: "Source URL (optional)" },
+  "capture.type_label": { es: "Tipo", en: "Type" },
+  "capture.lang_label": { es: "Idioma", en: "Language" },
+  "capture.submit": { es: "Capturar", en: "Capture" },
+  "capture.submitting": { es: "Procesando\u2026", en: "Processing\u2026" },
+  "capture.success": { es: "Nodo creado exitosamente", en: "Node created successfully" },
+  "capture.view_node": { es: "Ver nodo creado", en: "View created node" },
+  "nav.capture": { es: "Capturar", en: "Capture" },
 } as const;
 
 export type Locale = "es" | "en";

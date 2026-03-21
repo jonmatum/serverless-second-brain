@@ -14,6 +14,7 @@ const CARDS: { href: string; titleKey: DictKey; descKey: DictKey }[] = [
   { href: "/experiments", titleKey: "home.experiments", descKey: "home.experiments.desc" },
   { href: "/essays", titleKey: "home.essays", descKey: "home.essays.desc" },
   { href: "/timeline", titleKey: "home.timeline", descKey: "home.timeline.desc" },
+  { href: "/capture", titleKey: "home.capture", descKey: "home.capture.desc" },
 ];
 
 export default function Home() {

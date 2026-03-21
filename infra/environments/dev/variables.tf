@@ -95,11 +95,11 @@ variable "default_visibility" {
 variable "cognito_callback_urls" {
   description = "Allowed OAuth callback URLs for frontend"
   type        = list(string)
-  default     = ["http://localhost:3000/callback"]
+  default     = ["http://localhost:3000/callback", "https://d3k7drew8lusx6.cloudfront.net/callback"]
 }
 
 variable "cognito_logout_urls" {
   description = "Allowed OAuth logout URLs"
   type        = list(string)
-  default     = ["http://localhost:3000"]
+  default     = ["http://localhost:3000", "https://d3k7drew8lusx6.cloudfront.net"]
 }

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn, LogOut } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { PrefsMenu } from "@/components/prefs-menu";
 import { t, type DictKey } from "@/lib/i18n";
 import { Separator } from "@/components/ui/separator";
@@ -14,7 +15,38 @@ const NAV_KEYS: { href: string; key: DictKey }[] = [
   { href: "/search", key: "nav.search" },
   { href: "/concepts", key: "nav.concepts" },
   { href: "/timeline", key: "nav.timeline" },
+  { href: "/capture", key: "nav.capture" },
 ];
+
+function AuthButton() {
+  const { user, loading, login, logout } = useAuth();
+  const { locale } = usePrefs();
+
+  if (loading) return null;
+
+  if (user) {
+    return (
+      <button
+        onClick={logout}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        title={user.email}
+      >
+        <LogOut className="h-4 w-4" />
+        <span className="hidden sm:inline">{t("auth.logout", locale)}</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={login}
+      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      <LogIn className="h-4 w-4" />
+      <span className="hidden sm:inline">{t("auth.login", locale)}</span>
+    </button>
+  );
+}
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   const { layout, locale } = usePrefs();
@@ -38,11 +70,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
             </div>
+            <AuthButton />
             <PrefsMenu />
           </div>
 
           {/* Mobile controls */}
           <div className="flex items-center gap-2 md:hidden">
+            <AuthButton />
             <PrefsMenu />
             <button
               onClick={() => setOpen(!open)}
@@ -86,7 +120,9 @@ function ShellInner({ children }: { children: React.ReactNode }) {
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <PrefsProvider>
-      <ShellInner>{children}</ShellInner>
+      <AuthProvider>
+        <ShellInner>{children}</ShellInner>
+      </AuthProvider>
     </PrefsProvider>
   );
 }
