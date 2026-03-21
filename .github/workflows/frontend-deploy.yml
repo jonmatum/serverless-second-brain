@@ -13,6 +13,7 @@ permissions:
 env:
   AWS_REGION: us-east-1
   NODE_VERSION: '22'
+  PROJECT: ssb
 
 jobs:
   deploy-dev:
@@ -22,6 +23,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read SSM parameters
+        id: ssm
+        run: |
+          echo "api_url=$(aws ssm get-parameter --name /${{ env.PROJECT }}/dev/api/url --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+          echo "bucket=$(aws ssm get-parameter --name /${{ env.PROJECT }}/dev/frontend/bucket --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(aws ssm get-parameter --name /${{ env.PROJECT }}/dev/frontend/cloudfront-distribution-id --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -33,19 +46,14 @@ jobs:
       - name: Build
         working-directory: frontend
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.API_URL }}
+          NEXT_PUBLIC_API_URL: ${{ steps.ssm.outputs.api_url }}
         run: npx next build
 
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Deploy to S3
-        run: aws s3 sync frontend/out/ s3://${{ vars.FRONTEND_BUCKET }} --delete
+        run: aws s3 sync frontend/out/ s3://${{ steps.ssm.outputs.bucket }} --delete
 
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.ssm.outputs.distribution_id }} --paths "/*"
 
   deploy-prod:
     name: Deploy to prod
@@ -55,6 +63,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read SSM parameters
+        id: ssm
+        run: |
+          echo "api_url=$(aws ssm get-parameter --name /${{ env.PROJECT }}/prod/api/url --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+          echo "bucket=$(aws ssm get-parameter --name /${{ env.PROJECT }}/prod/frontend/bucket --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+          echo "distribution_id=$(aws ssm get-parameter --name /${{ env.PROJECT }}/prod/frontend/cloudfront-distribution-id --query Parameter.Value --output text)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -66,16 +86,11 @@ jobs:
       - name: Build
         working-directory: frontend
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.API_URL }}
+          NEXT_PUBLIC_API_URL: ${{ steps.ssm.outputs.api_url }}
         run: npx next build
 
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Deploy to S3
-        run: aws s3 sync frontend/out/ s3://${{ vars.FRONTEND_BUCKET }} --delete
+        run: aws s3 sync frontend/out/ s3://${{ steps.ssm.outputs.bucket }} --delete
 
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.ssm.outputs.distribution_id }} --paths "/*"

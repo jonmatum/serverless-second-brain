@@ -590,3 +590,23 @@ module "agentcore_runtime" {
 
   depends_on = [aws_s3_object.runtime_code]
 }
+
+# ─── SSM Parameters (for CI/CD) ───
+
+resource "aws_ssm_parameter" "frontend_bucket" {
+  name  = "/${var.project_name}/${var.environment}/frontend/bucket"
+  type  = "String"
+  value = module.cloudfront.frontend_bucket_name
+}
+
+resource "aws_ssm_parameter" "cloudfront_distribution_id" {
+  name  = "/${var.project_name}/${var.environment}/frontend/cloudfront-distribution-id"
+  type  = "String"
+  value = module.cloudfront.distribution_id
+}
+
+resource "aws_ssm_parameter" "api_url" {
+  name  = "/${var.project_name}/${var.environment}/api/url"
+  type  = "String"
+  value = module.api_gateway.invoke_url
+}
