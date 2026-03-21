@@ -124,8 +124,8 @@ async function handleNode(slug: string): Promise<APIGatewayProxyResult> {
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const nodeId = event.pathParameters?.id;
-    if (nodeId) return handleNode(nodeId);
-    return handleGraph(event);
+    if (nodeId) return await handleNode(nodeId);
+    return await handleGraph(event);
   } catch (error) {
     if (error instanceof NotFoundError) {
       return { statusCode: 404, body: JSON.stringify({ error: "not_found", message: error.message }) };

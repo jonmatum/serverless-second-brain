@@ -246,9 +246,17 @@ resource "aws_api_gateway_integration_response" "capture_201" {
   }
 
   # Extract the output field from the Step Functions sync response
-  # $.output is a JSON string — $input.json() extracts and unescapes it
+  # Check execution status to distinguish success from failure
   response_templates = {
-    "application/json" = "$input.json('$.output')"
+    "application/json" = <<-EOF
+#set($status = $input.json('$.status'))
+#if($status == '"SUCCEEDED"')
+$input.json('$.output')
+#else
+#set($context.responseOverride.status = 500)
+{"error":"pipeline_failed","cause":$input.json('$.cause'),"status":$status}
+#end
+EOF
   }
 
   depends_on = [aws_api_gateway_integration.capture_sfn]
