@@ -155,3 +155,24 @@ output "agentcore_runtime_id" {
 output "agentcore_runtime_arn" {
   value = module.agentcore_runtime.runtime_arn
 }
+
+# Cognito
+output "cognito_user_pool_id" {
+  value = module.cognito.user_pool_id
+}
+
+output "cognito_spa_client_id" {
+  value = module.cognito.spa_client_id
+}
+
+output "cognito_mcp_client_id" {
+  value = module.cognito.mcp_client_id
+}
+
+output "cognito_domain" {
+  value = module.cognito.domain
+}
+
+output "cognito_issuer_url" {
+  value = module.cognito.issuer_url
+}

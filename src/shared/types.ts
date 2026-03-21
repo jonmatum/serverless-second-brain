@@ -7,6 +7,7 @@ export interface MetaItem {
   slug: string;
   node_type: string;
   status: "seed" | "growing" | "evergreen";
+  visibility: "public" | "private";
   title: string;
   title_es: string;
   title_en: string;

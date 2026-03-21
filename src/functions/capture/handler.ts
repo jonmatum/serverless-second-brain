@@ -31,6 +31,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     // Write META item
+    const defaultVisibility = (process.env.DEFAULT_VISIBILITY ?? "private") as "public" | "private";
     const meta: MetaItem = {
       PK: `NODE#${slug}`,
       SK: "META",
@@ -38,6 +39,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       slug,
       node_type: nodeType,
       status: "seed",
+      visibility: defaultVisibility,
       title: metadata.title,
       title_es: metadata.title_es,
       title_en: metadata.title_en,

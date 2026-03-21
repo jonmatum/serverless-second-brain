@@ -62,6 +62,7 @@ locals {
     ENVIRONMENT                = var.environment
     NODE_TYPES                 = join(",", var.node_types)
     LANGUAGES                  = var.languages
+    DEFAULT_VISIBILITY         = var.default_visibility
   }
   capture_policies = [
     module.iam.dynamodb_write_policy_arn,
@@ -485,6 +486,16 @@ module "monitoring" {
   api_gateway_name    = "${var.project_name}-${var.environment}-api"
   api_gateway_stage   = var.environment
   state_machine_name  = "${var.project_name}-${var.environment}-capture-pipeline"
+}
+
+# --- Authentication (#17) ---
+
+module "cognito" {
+  source        = "../../modules/cognito"
+  project_name  = var.project_name
+  environment   = var.environment
+  callback_urls = var.cognito_callback_urls
+  logout_urls   = var.cognito_logout_urls
 }
 
 # --- Phase 3: AgentCore Runtime (#8) ---

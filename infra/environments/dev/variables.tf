@@ -80,3 +80,26 @@ variable "surfacing_similarity_threshold" {
   type        = string
   default     = "0.85"
 }
+
+variable "default_visibility" {
+  description = "Default visibility for new nodes: public or private"
+  type        = string
+  default     = "private"
+
+  validation {
+    condition     = contains(["public", "private"], var.default_visibility)
+    error_message = "Visibility must be public or private."
+  }
+}
+
+variable "cognito_callback_urls" {
+  description = "Allowed OAuth callback URLs for frontend"
+  type        = list(string)
+  default     = ["http://localhost:3000/callback"]
+}
+
+variable "cognito_logout_urls" {
+  description = "Allowed OAuth logout URLs"
+  type        = list(string)
+  default     = ["http://localhost:3000"]
+}
