@@ -7,6 +7,7 @@ import { NodeCard } from "@/components/node-card";
 import { Filters } from "@/components/filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { t, localized } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 
@@ -38,18 +39,21 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <h1 className="text-2xl font-bold">{t("search.title", locale)}</h1>
 
-      <form onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex gap-3">
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("search.placeholder", locale)}
-          aria-label={t("search.title", locale)}
-          className="flex-1"
-        />
+      <form onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("search.placeholder", locale)}
+            aria-label={t("search.title", locale)}
+            className="pl-9"
+          />
+        </div>
         <Button type="submit" disabled={loading}>
           {loading ? "\u2026" : t("search.button", locale)}
         </Button>

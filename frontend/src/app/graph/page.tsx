@@ -27,9 +27,9 @@ export default function GraphPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <h1 className="text-2xl font-bold">{t("graph.title", locale)}</h1>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
           <span className="text-sm text-muted-foreground">
             {t("graph.nodes_edges", locale, { nodes: data.meta.node_count, edges: data.meta.edge_count })}
@@ -39,7 +39,7 @@ export default function GraphPage() {
 
       <ForceGraph nodes={data.nodes} edges={data.edges} />
 
-      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground sm:gap-4">
         {Object.entries(TYPE_COLORS).map(([tp, c]) => (
           <span key={tp} className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: c }} />

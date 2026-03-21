@@ -19,16 +19,16 @@ const CARDS: { href: string; titleKey: DictKey; descKey: DictKey }[] = [
 export default function Home() {
   const { locale } = usePrefs();
   return (
-    <div className="space-y-10">
-      <div className="space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight">{t("home.title", locale)}</h1>
-        <p className="max-w-xl text-lg text-muted-foreground">{t("home.subtitle", locale)}</p>
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("home.title", locale)}</h1>
+        <p className="text-base text-muted-foreground sm:text-lg">{t("home.subtitle", locale)}</p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((c) => (
           <Link key={c.href} href={c.href}>
             <Card className="h-full transition hover:border-border/80 hover:bg-accent/50">
-              <CardContent className="p-5">
+              <CardContent className="p-4 sm:p-5">
                 <h2 className="font-semibold">{t(c.titleKey, locale)}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t(c.descKey, locale)}</p>
               </CardContent>

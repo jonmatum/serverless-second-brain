@@ -113,7 +113,7 @@ export function ForceGraph({ nodes, edges }: Props) {
   return (
     <svg
       ref={svgRef}
-      className="h-[70vh] w-full rounded-lg border border-zinc-800 bg-zinc-950"
+      className="h-[50vh] w-full rounded-lg border border-border bg-background sm:h-[70vh]"
     />
   );
 }

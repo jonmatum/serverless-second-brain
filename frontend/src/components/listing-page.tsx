@@ -31,11 +31,11 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <h1 className="text-2xl font-bold">{typeLabel(nodeType, locale)}s</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Select value={status || "_all"} onValueChange={(v: string | null) => setStatus(!v || v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[140px]" aria-label={t("filter.status", locale)}>
+            <SelectTrigger className="w-[130px]" aria-label={t("filter.status", locale)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -46,7 +46,7 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
             </SelectContent>
           </Select>
           <Select value={sort} onValueChange={(v: string | null) => v && setSort(v as "edges" | "title")}>
-            <SelectTrigger className="w-[160px]" aria-label={t("listing.sort", locale)}>
+            <SelectTrigger className="w-[140px]" aria-label={t("listing.sort", locale)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
