@@ -41,17 +41,19 @@ async function invokeWithRetry(params: { modelId: string; body: string }): Promi
 
 export async function classify(
   text: string,
-  existingSlugs: string[],
+  recentSlugs: string[],
   language: string,
 ): Promise<ClassificationResult> {
   const langFields = LANGUAGES.map((l) => `  "title_${l}": "${l} title",\n  "summary_${l}": "2-3 sentence ${l} summary"`).join(",\n");
 
+  const slugHint = recentSlugs.length > 0
+    ? `\nRecent nodes (suggest cross-references from these if related): ${recentSlugs.join(", ")}`
+    : "";
+
   const defaultPrompt = `You are a knowledge graph classifier. Given the following text, generate structured metadata for a knowledge node.
 
 Text:
-${text}
-
-Existing nodes in the graph (suggest cross-references from these): ${existingSlugs.slice(0, 50).join(", ")}
+${text}${slugHint}
 
 Input language: ${language}
 
@@ -65,7 +67,7 @@ ${langFields},
 
 Rules:
 - tags: 3-7 lowercase hyphenated tags
-- concepts: only slugs from the existing nodes list that are genuinely related
+- concepts: only slugs from the recent nodes list that are genuinely related (empty array if none match)
 - summaries: concrete and specific, not generic
 - title: concise, no articles`;
 

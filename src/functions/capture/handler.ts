@@ -17,8 +17,8 @@ import type { MetaItem, EdgeItem, AuditItem, CaptureResponse } from "../../share
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const input = validateCaptureRequest(JSON.parse(event.body ?? "{}"));
-    const existingSlugs = await listNodeSlugs();
-    const metadata = await classify(input.text, existingSlugs, input.language ?? "es");
+    const recentSlugs = await listNodeSlugs(20);
+    const metadata = await classify(input.text, recentSlugs, input.language ?? "es");
     const slug = generateSlug(metadata.title);
     const now = new Date().toISOString();
     const nodeType = input.type ?? "concept";
