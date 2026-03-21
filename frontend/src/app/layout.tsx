@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: `try{const t=localStorage.getItem("ssb-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");document.documentElement.classList.toggle("dark",t==="dark")}catch(e){}` }} />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
+      <body className="min-h-screen bg-background text-foreground antialiased font-sans" suppressHydrationWarning>
         <Shell>{children}</Shell>
       </body>
     </html>
