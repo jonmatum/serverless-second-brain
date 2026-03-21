@@ -12,7 +12,7 @@ const verifier = CognitoJwtVerifier.create({
 
 interface AuthorizerEvent {
   type: string;
-  headers?: Record<string, string>;
+  authorizationToken: string;
   methodArn: string;
 }
 
@@ -26,7 +26,7 @@ interface AuthorizerResult {
       Resource: string;
     }>;
   };
-  context?: Record<string, string | boolean>;
+  context?: Record<string, string>;
 }
 
 export const handler = async (event: AuthorizerEvent): Promise<AuthorizerResult> => {
@@ -38,18 +38,15 @@ export const handler = async (event: AuthorizerEvent): Promise<AuthorizerResult>
   const stage = apiGatewayArn[1];
   const resourceArn = `arn:aws:execute-api:${region}:${accountId}:${apiId}/${stage}/*`;
 
-  const authHeader = event.headers?.Authorization || event.headers?.authorization || "";
-  const token = authHeader.replace(/^Bearer\s+/i, "") || "";
+  const token = (event.authorizationToken || "").replace(/^Bearer\s+/i, "").trim();
 
   if (!token) {
-    // Anonymous — allow invoke but flag as unauthenticated
     return {
       principalId: "anonymous",
       policyDocument: {
         Version: "2012-10-17",
-        Statement: [{ Action: "execute-api:Invoke", Effect: "Allow", Resource: resourceArn }],
+        Statement: [{ Action: "execute-api:Invoke", Effect: "Deny", Resource: resourceArn }],
       },
-      context: { authenticated: "false" },
     };
   }
 
@@ -68,7 +65,6 @@ export const handler = async (event: AuthorizerEvent): Promise<AuthorizerResult>
       },
     };
   } catch {
-    // Invalid token — deny
     return {
       principalId: "unauthorized",
       policyDocument: {

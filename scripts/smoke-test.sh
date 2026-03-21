@@ -82,25 +82,38 @@ check "GET /search (no q → 400)" "400" "$STATUS"
 echo ""
 echo "✏️  Capture pipeline"
 
-API_KEY=$(cd "$(dirname "$0")/../infra/environments/$ENV" && terraform output -raw api_key_value 2>/dev/null || echo "")
-if [ -z "$API_KEY" ]; then
-  echo -e "  ${YELLOW}⏭  Skipping POST /capture — could not read API key from Terraform${NC}"
-else
-  TIMESTAMP=$(date +%s)
-  STATUS=$(curl -s -o /tmp/smoke-capture.json -w '%{http_code}' --max-time 25 -X POST "$API_URL/capture" \
-    -H "Content-Type: application/json" \
-    -H "x-api-key: $API_KEY" \
-    -d "{
-      \"text\": \"Smoke test $TIMESTAMP — verifying the capture pipeline processes text through Bedrock classification, DynamoDB persistence, S3 body storage, and edge creation end-to-end.\",
-      \"type\": \"note\",
-      \"language\": \"en\"
-    }")
-  CREATED_SLUG=$(python3 -c "import json; print(json.load(open('/tmp/smoke-capture.json')).get('slug','?'))" 2>/dev/null || echo "?")
-  check "POST /capture → $CREATED_SLUG" "201" "$STATUS"
+INFRA_DIR="$(dirname "$0")/../infra/environments/$ENV"
+COGNITO_DOMAIN=$(cd "$INFRA_DIR" && terraform output -raw cognito_domain 2>/dev/null || echo "")
+MCP_CLIENT_ID=$(cd "$INFRA_DIR" && terraform output -raw cognito_mcp_client_id 2>/dev/null || echo "")
+MCP_SECRET=$(cd "$INFRA_DIR" && terraform output -raw cognito_mcp_client_secret 2>/dev/null || echo "")
 
-  if [ "$STATUS" = "201" ] && [ "$CREATED_SLUG" != "?" ]; then
-    STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/nodes/$CREATED_SLUG")
-    check "GET /nodes/$CREATED_SLUG (verify created)" "200" "$STATUS"
+if [ -z "$COGNITO_DOMAIN" ] || [ -z "$MCP_CLIENT_ID" ] || [ -z "$MCP_SECRET" ]; then
+  echo -e "  ${YELLOW}⏭  Skipping POST /capture — could not read Cognito credentials from Terraform${NC}"
+else
+  TOKEN=$(curl -s -X POST "$COGNITO_DOMAIN/oauth2/token" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -u "$MCP_CLIENT_ID:$MCP_SECRET" \
+    -d "grant_type=client_credentials&scope=ssb-api/read ssb-api/write" | python3 -c "import json,sys; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
+
+  if [ -z "$TOKEN" ]; then
+    echo -e "  ${YELLOW}⏭  Skipping POST /capture — could not obtain Cognito token${NC}"
+  else
+    TIMESTAMP=$(date +%s)
+    STATUS=$(curl -s -o /tmp/smoke-capture.json -w '%{http_code}' --max-time 25 -X POST "$API_URL/capture" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $TOKEN" \
+      -d "{
+        \"text\": \"Smoke test $TIMESTAMP — verifying the capture pipeline processes text through Bedrock classification, DynamoDB persistence, S3 body storage, and edge creation end-to-end.\",
+        \"type\": \"note\",
+        \"language\": \"en\"
+      }")
+    CREATED_SLUG=$(python3 -c "import json; d=json.load(open('/tmp/smoke-capture.json')); print(d.get('slug','?') if isinstance(d,dict) else json.loads(d).get('slug','?'))" 2>/dev/null || echo "?")
+    check "POST /capture → $CREATED_SLUG" "201" "$STATUS"
+
+    if [ "$STATUS" = "201" ] && [ "$CREATED_SLUG" != "?" ]; then
+      STATUS=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" "$API_URL/nodes/$CREATED_SLUG")
+      check "GET /nodes/$CREATED_SLUG (verify created)" "200" "$STATUS"
+    fi
   fi
 fi
 

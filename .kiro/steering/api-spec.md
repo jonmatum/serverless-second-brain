@@ -13,9 +13,10 @@ This file defines the exact contract for all REST API endpoints. All Lambda hand
 
 ## Authentication
 
-- Read endpoints (`GET`): no auth required
-- Write endpoints (`POST`): API key required via `x-api-key` header
+- Read endpoints (`GET`): no auth required (anonymous sees public nodes only; Bearer JWT sees all)
+- Write endpoints (`POST`): Cognito JWT required via `Authorization: Bearer {token}` header
 - Service-to-service: IAM authorization (SigV4)
+- MCP writes: Cognito client credentials flow (machine-to-machine)
 
 ## Endpoints
 
@@ -57,7 +58,7 @@ Creates a new knowledge node. Triggers the Step Functions capture pipeline.
 **Error 429**: `{ "error": "rate_limited", "message": "Too many requests" }`
 **Error 503**: `{ "error": "bedrock_unavailable", "message": "AI classification service temporarily unavailable" }`
 
-Auth: API key required.
+Auth: Cognito JWT required.
 
 ### GET /search
 

@@ -211,8 +211,9 @@ resource "aws_api_gateway_method" "capture_post" {
   rest_api_id      = aws_api_gateway_rest_api.this.id
   resource_id      = aws_api_gateway_resource.capture.id
   http_method      = "POST"
-  authorization    = "NONE"
-  api_key_required = true
+  authorization    = var.enable_authorizer ? "CUSTOM" : "NONE"
+  authorizer_id    = var.enable_authorizer ? aws_api_gateway_authorizer.cognito[0].id : null
+  api_key_required = var.enable_authorizer ? false : true
 }
 
 resource "aws_api_gateway_integration" "capture_sfn" {
@@ -539,10 +540,10 @@ resource "aws_api_gateway_authorizer" "cognito" {
   count                            = var.enable_authorizer ? 1 : 0
   name                             = "${var.api_name}-cognito"
   rest_api_id                      = aws_api_gateway_rest_api.this.id
-  type                             = "REQUEST"
+  type                             = "TOKEN"
   authorizer_uri                   = var.authorizer_lambda_invoke_arn
-  authorizer_result_ttl_in_seconds = 0
-  identity_source                  = ""
+  authorizer_result_ttl_in_seconds = 300
+  identity_source                  = "method.request.header.Authorization"
 }
 
 resource "aws_lambda_permission" "apigw_authorizer" {

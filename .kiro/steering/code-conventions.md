@@ -93,6 +93,10 @@ Lambda functions receive configuration via environment variables:
 | `CORS_ALLOW_ORIGIN` | Search, Graph | CORS allowed origin (dev: `*`, prod: `https://jonmatum.com`) |
 | `SNS_DIGEST_TOPIC_ARN` | Surfacing | SNS topic for daily digest |
 | `ENVIRONMENT` | All | `dev` or `prod` |
+| `DEFAULT_VISIBILITY` | Capture | Default visibility for new nodes (`public` or `private`) |
+| `USER_POOL_ID` | Authorizer, Graph, Search | Cognito User Pool ID for JWT verification |
+| `SPA_CLIENT_ID` | Authorizer, Graph, Search | Cognito SPA app client ID |
+| `MCP_CLIENT_ID` | Authorizer, Graph, Search | Cognito MCP app client ID |
 
 Note: `SNS_CAPTURE_TOPIC_ARN` is not needed as a Lambda env var — SNS publishing for capture-complete is handled natively by Step Functions (NotifySuccess state).
 
