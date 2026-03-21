@@ -4,6 +4,7 @@ import { BedrockError } from "./errors.js";
 
 const bedrock = new BedrockRuntimeClient({});
 const MODEL_ID = process.env.BEDROCK_MODEL_ID!;
+const EMBEDDING_MODEL_ID = process.env.BEDROCK_EMBEDDING_MODEL_ID ?? "amazon.titan-embed-text-v2:0";
 
 export async function classify(
   text: string,
@@ -61,4 +62,22 @@ Rules:
   }
 
   return JSON.parse(jsonMatch[0]) as ClassificationResult;
+}
+
+export async function embed(text: string): Promise<number[]> {
+  const response = await bedrock.send(new InvokeModelCommand({
+    modelId: EMBEDDING_MODEL_ID,
+    contentType: "application/json",
+    accept: "application/json",
+    body: JSON.stringify({ inputText: text }),
+  }));
+
+  const body = JSON.parse(new TextDecoder().decode(response.body));
+  const vector = body.embedding;
+
+  if (!Array.isArray(vector) || vector.length === 0) {
+    throw new BedrockError("Empty embedding from Bedrock Titan");
+  }
+
+  return vector as number[];
 }

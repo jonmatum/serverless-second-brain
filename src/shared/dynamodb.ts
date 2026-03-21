@@ -1,6 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import type { MetaItem, EdgeItem, AuditItem } from "./types.js";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import type { MetaItem, EdgeItem, EmbedItem, AuditItem } from "./types.js";
 
 const client = new DynamoDBClient({});
 const ddb = DynamoDBDocumentClient.from(client);
@@ -58,4 +58,78 @@ export async function listNodeSlugs(limit = 200): Promise<string[]> {
   } while (lastKey && slugs.length < limit);
 
   return slugs;
+}
+
+export async function putEmbed(item: EmbedItem): Promise<void> {
+  await ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
+}
+
+export async function getNodeEdges(slug: string): Promise<EdgeItem[]> {
+  const result = await ddb.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "PK = :pk AND begins_with(SK, :prefix)",
+    ExpressionAttributeValues: { ":pk": `NODE#${slug}`, ":prefix": "EDGE#" },
+  }));
+  return (result.Items ?? []) as EdgeItem[];
+}
+
+export async function getInboundEdges(slug: string): Promise<EdgeItem[]> {
+  const result = await ddb.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    IndexName: "GSI1",
+    KeyConditionExpression: "SK = :sk",
+    ExpressionAttributeValues: { ":sk": `EDGE#${slug}` },
+  }));
+  return (result.Items ?? []) as EdgeItem[];
+}
+
+export async function getAllNodes(): Promise<MetaItem[]> {
+  const items: MetaItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const result = await ddb.send(new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: "GSI1",
+      KeyConditionExpression: "SK = :sk",
+      ExpressionAttributeValues: { ":sk": "META" },
+      ExclusiveStartKey: lastKey,
+    }));
+    items.push(...(result.Items ?? []) as MetaItem[]);
+    lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
+  return items;
+}
+
+export async function getAllEmbeddings(): Promise<EmbedItem[]> {
+  const items: EmbedItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const result = await ddb.send(new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: "GSI1",
+      KeyConditionExpression: "SK = :sk",
+      ExpressionAttributeValues: { ":sk": "EMBED" },
+      ExclusiveStartKey: lastKey,
+    }));
+    items.push(...(result.Items ?? []) as EmbedItem[]);
+    lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
+  return items;
+}
+
+export async function getAllEdges(): Promise<EdgeItem[]> {
+  const items: EdgeItem[] = [];
+  let lastKey: Record<string, unknown> | undefined;
+  do {
+    const result = await ddb.send(new ScanCommand({
+      TableName: TABLE_NAME,
+      FilterExpression: "begins_with(SK, :prefix)",
+      ExpressionAttributeValues: { ":prefix": "EDGE#" },
+      ProjectionExpression: "PK, SK, edge_type, weight",
+      ExclusiveStartKey: lastKey,
+    }));
+    items.push(...(result.Items ?? []) as EdgeItem[]);
+    lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+  } while (lastKey);
+  return items;
 }

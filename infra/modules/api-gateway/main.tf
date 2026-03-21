@@ -13,6 +13,30 @@ variable "capture_state_machine_arn" {
   type        = string
 }
 
+variable "search_lambda_invoke_arn" {
+  description = "Invoke ARN of the Search Lambda"
+  type        = string
+  default     = ""
+}
+
+variable "search_lambda_function_name" {
+  description = "Function name of the Search Lambda"
+  type        = string
+  default     = ""
+}
+
+variable "graph_lambda_invoke_arn" {
+  description = "Invoke ARN of the Graph Lambda"
+  type        = string
+  default     = ""
+}
+
+variable "graph_lambda_function_name" {
+  description = "Function name of the Graph Lambda"
+  type        = string
+  default     = ""
+}
+
 variable "cors_allow_origin" {
   description = "CORS allowed origin"
   type        = string
@@ -250,6 +274,116 @@ EOF
   }
 
   depends_on = [aws_api_gateway_integration_response.capture_201]
+}
+
+# ─── /search (Lambda proxy) ───
+
+resource "aws_api_gateway_resource" "search" {
+  count       = var.search_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_rest_api.this.root_resource_id
+  path_part   = "search"
+}
+
+resource "aws_api_gateway_method" "search_get" {
+  count         = var.search_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  resource_id   = aws_api_gateway_resource.search[0].id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "search_lambda" {
+  count                   = var.search_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id             = aws_api_gateway_rest_api.this.id
+  resource_id             = aws_api_gateway_resource.search[0].id
+  http_method             = aws_api_gateway_method.search_get[0].http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.search_lambda_invoke_arn
+}
+
+resource "aws_lambda_permission" "apigw_search" {
+  count         = var.search_lambda_function_name != "" ? 1 : 0
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.search_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
+# ─── /graph (Lambda proxy) ───
+
+resource "aws_api_gateway_resource" "graph" {
+  count       = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_rest_api.this.root_resource_id
+  path_part   = "graph"
+}
+
+resource "aws_api_gateway_method" "graph_get" {
+  count         = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  resource_id   = aws_api_gateway_resource.graph[0].id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "graph_lambda" {
+  count                   = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id             = aws_api_gateway_rest_api.this.id
+  resource_id             = aws_api_gateway_resource.graph[0].id
+  http_method             = aws_api_gateway_method.graph_get[0].http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.graph_lambda_invoke_arn
+}
+
+resource "aws_lambda_permission" "apigw_graph" {
+  count         = var.graph_lambda_function_name != "" ? 1 : 0
+  statement_id  = "AllowAPIGatewayInvokeGraph"
+  action        = "lambda:InvokeFunction"
+  function_name = var.graph_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
+# ─── /nodes/{id} (Lambda proxy → Graph Lambda) ───
+
+resource "aws_api_gateway_resource" "nodes" {
+  count       = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_rest_api.this.root_resource_id
+  path_part   = "nodes"
+}
+
+resource "aws_api_gateway_resource" "nodes_id" {
+  count       = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.nodes[0].id
+  path_part   = "{id}"
+}
+
+resource "aws_api_gateway_method" "nodes_id_get" {
+  count         = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  resource_id   = aws_api_gateway_resource.nodes_id[0].id
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "nodes_id_lambda" {
+  count                   = var.graph_lambda_invoke_arn != "" ? 1 : 0
+  rest_api_id             = aws_api_gateway_rest_api.this.id
+  resource_id             = aws_api_gateway_resource.nodes_id[0].id
+  http_method             = aws_api_gateway_method.nodes_id_get[0].http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.graph_lambda_invoke_arn
 }
 
 # ─── CORS (OPTIONS) for /capture ───

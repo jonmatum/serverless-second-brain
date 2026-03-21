@@ -125,6 +125,44 @@ module "capture_create_edges" {
   policy_arns           = [module.iam.dynamodb_write_policy_arn]
 }
 
+
+# Search Lambda — hybrid keyword + semantic search
+module "search_lambda" {
+  source        = "../../modules/lambda"
+  function_name = "${var.project_name}-${var.environment}-search"
+  memory_size   = 512
+  timeout       = 30
+
+  environment_variables = {
+    TABLE_NAME                 = module.dynamodb.table_name
+    BEDROCK_EMBEDDING_MODEL_ID = var.bedrock_embedding_model_id
+    ENVIRONMENT                = var.environment
+  }
+
+  policy_arns = [
+    module.iam.dynamodb_read_policy_arn,
+    module.iam.bedrock_invoke_policy_arn,
+  ]
+}
+
+# Graph Lambda — knowledge graph API (read-only)
+module "graph_lambda" {
+  source        = "../../modules/lambda"
+  function_name = "${var.project_name}-${var.environment}-graph"
+  memory_size   = 256
+  timeout       = 10
+
+  environment_variables = {
+    TABLE_NAME  = module.dynamodb.table_name
+    BUCKET_NAME = module.s3_content.bucket_name
+    ENVIRONMENT = var.environment
+  }
+
+  policy_arns = [
+    module.iam.dynamodb_read_policy_arn,
+    module.iam.s3_read_policy_arn,
+  ]
+}
 # --- SNS ---
 
 module "capture_complete_topic" {
@@ -233,9 +271,13 @@ module "capture_pipeline" {
 # --- Interface Layer ---
 
 module "api_gateway" {
-  source                    = "../../modules/api-gateway"
-  api_name                  = "${var.project_name}-${var.environment}-api"
-  stage_name                = var.environment
-  capture_state_machine_arn = module.capture_pipeline.state_machine_arn
-  cors_allow_origin         = var.cors_allow_origin
+  source                      = "../../modules/api-gateway"
+  api_name                    = "${var.project_name}-${var.environment}-api"
+  stage_name                  = var.environment
+  capture_state_machine_arn   = module.capture_pipeline.state_machine_arn
+  search_lambda_invoke_arn    = module.search_lambda.invoke_arn
+  search_lambda_function_name = module.search_lambda.function_name
+  graph_lambda_invoke_arn     = module.graph_lambda.invoke_arn
+  graph_lambda_function_name  = module.graph_lambda.function_name
+  cors_allow_origin           = var.cors_allow_origin
 }

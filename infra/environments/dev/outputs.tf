@@ -57,6 +57,22 @@ output "capture_pipeline_arn" {
   value = module.capture_pipeline.state_machine_arn
 }
 
+output "search_function_name" {
+  value = module.search_lambda.function_name
+}
+
+output "search_function_arn" {
+  value = module.search_lambda.function_arn
+}
+
+output "graph_function_name" {
+  value = module.graph_lambda.function_name
+}
+
+output "graph_function_arn" {
+  value = module.graph_lambda.function_arn
+}
+
 output "capture_complete_topic_arn" {
   value = module.capture_complete_topic.topic_arn
 }
