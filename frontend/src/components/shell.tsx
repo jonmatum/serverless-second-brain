@@ -1,23 +1,31 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Sun, Moon, Maximize, Minimize } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3 } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { t, type DictKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const NAV_KEYS: { href: string; key: DictKey }[] = [
+const contentLinks: { href: string; key: DictKey }[] = [
   { href: "/concepts", key: "nav.concepts" },
   { href: "/notes", key: "nav.notes" },
   { href: "/experiments", key: "nav.experiments" },
   { href: "/essays", key: "nav.essays" },
 ];
 
-const TOOL_KEYS: { href: string; key: DictKey }[] = [
+const toolLinks: { href: string; key: DictKey; icon: React.ReactNode }[] = [
+  { href: "/graph", key: "nav.graph", icon: <Network className="h-4 w-4" /> },
+  { href: "/timeline", key: "nav.timeline", icon: <Clock className="h-4 w-4" /> },
+  { href: "/dashboard", key: "nav.dashboard", icon: <BarChart3 className="h-4 w-4" /> },
+];
+
+const allMobileLinks: { href: string; key: DictKey }[] = [
+  ...contentLinks,
   { href: "/graph", key: "nav.graph" },
   { href: "/search", key: "nav.search" },
   { href: "/timeline", key: "nav.timeline" },
   { href: "/dashboard", key: "nav.dashboard" },
+  { href: "/capture", key: "nav.capture" },
 ];
 
 function AuthButton() {
@@ -26,16 +34,16 @@ function AuthButton() {
   if (loading) return null;
   if (user) {
     return (
-      <button onClick={logout} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors" title={user.email}>
+      <button onClick={logout} className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]" title={user.email}>
         <LogOut className="h-4 w-4" />
-        <span className="hidden sm:inline">{t("auth.logout", locale)}</span>
+        <span className="sr-only">{t("auth.logout", locale)}</span>
       </button>
     );
   }
   return (
-    <button onClick={login} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+    <button onClick={login} className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">
       <LogIn className="h-4 w-4" />
-      <span className="hidden sm:inline">{t("auth.login", locale)}</span>
+      <span className="sr-only">{t("auth.login", locale)}</span>
     </button>
   );
 }
@@ -45,23 +53,10 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
       aria-label={theme === "dark" ? "Light mode" : "Dark mode"}
     >
       {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </button>
-  );
-}
-
-function LayoutToggle() {
-  const { layout, setLayout } = usePrefs();
-  return (
-    <button
-      onClick={() => setLayout(layout === "boxed" ? "full" : "boxed")}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      aria-label={layout === "boxed" ? "Full width" : "Boxed"}
-    >
-      {layout === "boxed" ? <Maximize className="h-4 w-4" /> : <Minimize className="h-4 w-4" />}
     </button>
   );
 }
@@ -71,7 +66,7 @@ function LocaleToggle() {
   return (
     <button
       onClick={() => setLocale(locale === "es" ? "en" : "es")}
-      className="inline-flex h-8 items-center justify-center rounded-md px-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      className="text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
     >
       {locale === "es" ? "EN" : "ES"}
     </button>
@@ -79,155 +74,120 @@ function LocaleToggle() {
 }
 
 function ShellInner() {
-  const { layout, locale } = usePrefs();
+  const { locale } = usePrefs();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  const maxW = layout === "boxed" ? "max-w-5xl" : "";
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
-        <div className={`mx-auto flex items-center justify-between gap-4 px-4 py-3 sm:px-6 ${maxW}`}>
-          {/* Logo */}
-          <Link to="/" className="text-base font-semibold tracking-tight shrink-0" onClick={() => setOpen(false)}>
-            ssb
-          </Link>
-
-          {/* Desktop nav — content types */}
-          <div className="hidden items-center gap-1 md:flex">
-            {NAV_KEYS.map((n) => (
-              <Link
-                key={n.href}
-                to={n.href}
-                className={cn(
-                  "rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                  isActive(n.href)
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t(n.key, locale)}
+      <header className="border-b border-[var(--color-border)]">
+        <nav className="mx-auto max-w-3xl px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <Link to="/" className="font-mono text-sm font-semibold" onClick={() => setOpen(false)}>
+                ssb
               </Link>
-            ))}
-          </div>
-
-          {/* Desktop right side — tools + capture + controls */}
-          <div className="hidden items-center gap-1 md:flex">
-            {TOOL_KEYS.map((n) => (
-              <Link
-                key={n.href}
-                to={n.href}
-                className={cn(
-                  "rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                  isActive(n.href)
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t(n.key, locale)}
-              </Link>
-            ))}
-            <Link
-              to="/capture"
-              className={cn(
-                "rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
-                isActive("/capture")
-                  ? "text-foreground"
-                  : "text-primary hover:text-primary/80",
-              )}
-            >
-              + {t("nav.capture", locale)}
-            </Link>
-            <div className="ml-1 flex items-center border-l border-border/50 pl-2">
-              <AuthButton />
-              <ThemeToggle />
-              <LayoutToggle />
-              <LocaleToggle />
+              <span className="rounded-full border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--color-muted)]">
+                alpha
+              </span>
             </div>
-          </div>
 
-          {/* Mobile controls */}
-          <div className="flex items-center gap-0.5 md:hidden">
-            <AuthButton />
-            <ThemeToggle />
-            <LocaleToggle />
-            <button
-              onClick={() => setOpen(!open)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              aria-label="Menu"
-            >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
+            {/* Desktop nav */}
+            <div className="flex items-center gap-4">
+              <div className="hidden items-center gap-4 text-sm text-[var(--color-muted)] md:flex">
+                {contentLinks.map((n) => (
+                  <Link
+                    key={n.href}
+                    to={n.href}
+                    className={cn(
+                      "transition-colors hover:text-[var(--color-fg)]",
+                      isActive(n.href) && "text-[var(--color-fg)] font-medium",
+                    )}
+                  >
+                    {t(n.key, locale)}
+                  </Link>
+                ))}
+                <span className="h-4 w-px bg-[var(--color-border)]" />
+                {toolLinks.map((n) => (
+                  <Link
+                    key={n.href}
+                    to={n.href}
+                    className={cn(
+                      "transition-colors hover:text-[var(--color-fg)]",
+                      isActive(n.href) && "text-[var(--color-fg)]",
+                    )}
+                    aria-label={t(n.key, locale)}
+                    title={t(n.key, locale)}
+                  >
+                    {n.icon}
+                  </Link>
+                ))}
+              </div>
 
-        {/* Mobile menu */}
-        {open && (
-          <div className="border-t border-border/50 px-4 pb-4 pt-2 md:hidden">
-            <p className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("home.browse", locale)}</p>
-            {NAV_KEYS.map((n) => (
-              <Link
-                key={n.href}
-                to={n.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "block rounded-md px-3 py-2.5 text-sm transition-colors",
-                  isActive(n.href)
-                    ? "text-foreground font-medium bg-accent"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                {t(n.key, locale)}
-              </Link>
-            ))}
-            <p className="px-3 pb-1 pt-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("nav.tools", locale)}</p>
-            {TOOL_KEYS.map((n) => (
-              <Link
-                key={n.href}
-                to={n.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "block rounded-md px-3 py-2.5 text-sm transition-colors",
-                  isActive(n.href)
-                    ? "text-foreground font-medium bg-accent"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                {t(n.key, locale)}
-              </Link>
-            ))}
-            <div className="mt-3 border-t border-border/50 pt-3">
-              <Link
-                to="/capture"
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "block rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive("/capture")
-                    ? "text-foreground bg-accent"
-                    : "text-primary hover:bg-accent",
-                )}
-              >
-                + {t("nav.capture", locale)}
-              </Link>
-              <div className="mt-2 flex items-center gap-1 px-3">
-                <LayoutToggle />
-                <span className="text-xs text-muted-foreground">{t(layout === "boxed" ? "prefs.boxed" : "prefs.full", locale)}</span>
+              {/* Controls */}
+              <div className="hidden items-center gap-4 md:flex">
+                <Link
+                  to="/search"
+                  className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
+                  aria-label={t("nav.search", locale)}
+                  title={t("nav.search", locale)}
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                </Link>
+                <AuthButton />
+                <LocaleToggle />
+                <ThemeToggle />
+              </div>
+
+              {/* Mobile */}
+              <div className="flex items-center gap-3 md:hidden">
+                <AuthButton />
+                <LocaleToggle />
+                <ThemeToggle />
+                <button
+                  onClick={() => setOpen(!open)}
+                  className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
+                  aria-label={open ? "Close menu" : "Open menu"}
+                >
+                  {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </nav>
 
-      <main className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-10 ${maxW}`}>
+          {/* Mobile menu */}
+          {open && (
+            <div className="flex flex-col gap-3 pb-2 pt-4 text-sm md:hidden">
+              {allMobileLinks.map((n) => (
+                <Link
+                  key={n.href}
+                  to={n.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "py-1 text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]",
+                    isActive(n.href) && "text-[var(--color-fg)] font-medium",
+                  )}
+                >
+                  {t(n.key, locale)}
+                </Link>
+              ))}
+            </div>
+          )}
+        </nav>
+      </header>
+
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <Outlet />
       </main>
 
-      <footer className={`mx-auto w-full border-t border-border/50 px-4 py-6 sm:px-6 ${maxW}`}>
-        <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-          <span>{t("footer", locale)}</span>
-          <span className="text-muted-foreground/60">alpha</span>
+      <footer className="border-t border-[var(--color-border)]">
+        <div className="mx-auto max-w-3xl px-6 py-8">
+          <p className="text-center text-xs text-[var(--color-muted)]">
+            {t("footer", locale)} · <span className="uppercase tracking-wider">alpha</span>
+          </p>
         </div>
       </footer>
     </div>

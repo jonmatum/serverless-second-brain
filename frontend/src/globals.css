@@ -95,6 +95,13 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+
+    /* jonmatum.com design tokens */
+    --color-bg: #fafafa;
+    --color-fg: #171717;
+    --color-muted: #737373;
+    --color-border: #e5e5e5;
+    --color-accent: #2563eb;
 }
 
 .dark {
@@ -129,16 +136,48 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+
+    /* jonmatum.com dark tokens */
+    --color-bg: #0a0a0a;
+    --color-fg: #ededed;
+    --color-muted: #a3a3a3;
+    --color-border: #262626;
+    --color-accent: #60a5fa;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
-    @apply bg-background text-foreground;
-    }
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
   html {
     @apply font-sans;
-    }
+  }
+}
+
+/* Minimal scrollbar matching jonmatum.com */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
 }

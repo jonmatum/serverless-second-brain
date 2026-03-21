@@ -1,82 +1,82 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { Brain, FileText, FlaskConical, PenLine, Network, Search, Clock, BarChart3, PlusCircle } from "lucide-react";
+import { api } from "@/lib/api";
+import type { GraphResponse } from "@/lib/types";
 import { t, type DictKey } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
-import { BarChart3, GitFork, Search, BookOpen, FileText, FlaskConical, PenLine, Clock, PlusCircle } from "lucide-react";
 
-const EXPLORE: { href: string; titleKey: DictKey; descKey: DictKey; icon: React.ReactNode }[] = [
-  { href: "/graph", titleKey: "home.graph", descKey: "home.graph.desc", icon: <GitFork className="h-5 w-5 text-muted-foreground" /> },
-  { href: "/search", titleKey: "home.search", descKey: "home.search.desc", icon: <Search className="h-5 w-5 text-muted-foreground" /> },
-  { href: "/timeline", titleKey: "home.timeline", descKey: "home.timeline.desc", icon: <Clock className="h-5 w-5 text-muted-foreground" /> },
-  { href: "/dashboard", titleKey: "home.dashboard", descKey: "home.dashboard.desc", icon: <BarChart3 className="h-5 w-5 text-muted-foreground" /> },
+const sections: { href: string; titleKey: DictKey; descKey: DictKey; icon: React.ReactNode; type: string }[] = [
+  { href: "/concepts", titleKey: "home.concepts", descKey: "home.concepts.desc", icon: <Brain className="h-4 w-4" />, type: "concept" },
+  { href: "/notes", titleKey: "home.notes", descKey: "home.notes.desc", icon: <FileText className="h-4 w-4" />, type: "note" },
+  { href: "/experiments", titleKey: "home.experiments", descKey: "home.experiments.desc", icon: <FlaskConical className="h-4 w-4" />, type: "experiment" },
+  { href: "/essays", titleKey: "home.essays", descKey: "home.essays.desc", icon: <PenLine className="h-4 w-4" />, type: "essay" },
 ];
 
-const BROWSE: { href: string; titleKey: DictKey; descKey: DictKey; icon: React.ReactNode; color: string }[] = [
-  { href: "/concepts", titleKey: "home.concepts", descKey: "home.concepts.desc", icon: <BookOpen className="h-5 w-5" />, color: "text-indigo-500" },
-  { href: "/notes", titleKey: "home.notes", descKey: "home.notes.desc", icon: <FileText className="h-5 w-5" />, color: "text-cyan-500" },
-  { href: "/experiments", titleKey: "home.experiments", descKey: "home.experiments.desc", icon: <FlaskConical className="h-5 w-5" />, color: "text-amber-500" },
-  { href: "/essays", titleKey: "home.essays", descKey: "home.essays.desc", icon: <PenLine className="h-5 w-5" />, color: "text-pink-500" },
+const quickLinks: { href: string; key: DictKey; icon: React.ReactNode }[] = [
+  { href: "/graph", key: "home.graph.full", icon: <Network className="h-3.5 w-3.5" /> },
+  { href: "/search", key: "home.search.full", icon: <Search className="h-3.5 w-3.5" /> },
+  { href: "/timeline", key: "home.timeline.full", icon: <Clock className="h-3.5 w-3.5" /> },
+  { href: "/dashboard", key: "home.dashboard.full", icon: <BarChart3 className="h-3.5 w-3.5" /> },
+  { href: "/capture", key: "home.capture.full", icon: <PlusCircle className="h-3.5 w-3.5" /> },
 ];
 
 export default function Home() {
   const { locale } = usePrefs();
-  return (
-    <div className="space-y-10">
-      {/* Hero */}
-      <div className="space-y-3 pt-4 sm:pt-8">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("home.title", locale)}</h1>
-        <p className="max-w-2xl text-base text-muted-foreground leading-relaxed sm:text-lg">{t("home.subtitle", locale)}</p>
-      </div>
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
-      {/* Browse by type — primary action */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        {BROWSE.map((c) => (
-          <Link key={c.href} to={c.href}>
-            <Card className="h-full transition-colors hover:bg-accent/50">
-              <CardContent className="flex items-center gap-3 p-4">
-                <div className={c.color}>{c.icon}</div>
-                <div className="min-w-0">
-                  <h2 className="text-sm font-semibold">{t(c.titleKey, locale)}</h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t(c.descKey, locale)}</p>
-                </div>
-              </CardContent>
-            </Card>
+  useEffect(() => {
+    api.graph().then((d: GraphResponse) => {
+      const c: Record<string, number> = {};
+      for (const n of d.nodes) c[n.node_type] = (c[n.node_type] ?? 0) + 1;
+      setCounts(c);
+    }).catch(() => {});
+  }, []);
+
+  return (
+    <div className="space-y-16">
+      {/* Hero */}
+      <section className="flex flex-col items-center gap-6 pt-8 text-center">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">{t("home.title", locale)}</h1>
+          <p className="mt-2 text-[var(--color-muted)]">{t("home.subtitle", locale)}</p>
+        </div>
+      </section>
+
+      {/* Section cards */}
+      <section className="grid gap-4 sm:grid-cols-2">
+        {sections.map((s) => (
+          <Link
+            key={s.href}
+            to={s.href}
+            className="group rounded-xl border border-[var(--color-border)] p-5 transition-all hover:border-[var(--color-accent)] hover:shadow-[0_0_20px_-5px_var(--color-accent)]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[var(--color-muted)] transition-colors group-hover:text-[var(--color-accent)]">{s.icon}</span>
+                <h2 className="font-medium">{t(s.titleKey, locale)}</h2>
+              </div>
+              {counts[s.type] != null && (
+                <span className="font-mono text-xs text-[var(--color-muted)]">{counts[s.type]}</span>
+              )}
+            </div>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">{t(s.descKey, locale)}</p>
           </Link>
         ))}
-      </div>
+      </section>
 
-      {/* Explore tools */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{t("home.explore", locale)}</h2>
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          {EXPLORE.map((c) => (
-            <Link key={c.href} to={c.href}>
-              <Card className="h-full transition-colors hover:bg-accent/50">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <div className="mt-0.5 shrink-0">{c.icon}</div>
-                  <div className="min-w-0">
-                    <h2 className="text-sm font-semibold">{t(c.titleKey, locale)}</h2>
-                    <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{t(c.descKey, locale)}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Capture CTA */}
-      <Link to="/capture">
-        <Card className="transition-colors hover:bg-accent/50 border-dashed">
-          <CardContent className="flex items-center gap-3 p-4">
-            <PlusCircle className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div>
-              <h2 className="text-sm font-semibold">{t("home.capture", locale)}</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">{t("home.capture.desc", locale)}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
+      {/* Quick links */}
+      <section className="flex flex-wrap justify-center gap-3 text-xs text-[var(--color-muted)]">
+        {quickLinks.map((l) => (
+          <Link
+            key={l.href}
+            to={l.href}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-3 py-1.5 transition-colors hover:border-[var(--color-muted)]"
+          >
+            {l.icon} {t(l.key, locale)}
+          </Link>
+        ))}
+      </section>
     </div>
   );
 }
