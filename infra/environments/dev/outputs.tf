@@ -112,6 +112,19 @@ output "frontend_bucket_name" {
   value = module.cloudfront.frontend_bucket_name
 }
 
+# Surfacing (Phase 4)
+output "surfacing_function_name" {
+  value = module.surfacing_lambda.function_name
+}
+
+output "daily_digest_topic_arn" {
+  value = module.daily_digest_topic.topic_arn
+}
+
+output "surfacing_schedule_rule" {
+  value = module.surfacing_schedule.rule_name
+}
+
 # AgentCore Gateway
 output "agentcore_gateway_id" {
   value = module.agentcore_gateway.gateway_id

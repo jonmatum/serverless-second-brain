@@ -330,6 +330,56 @@ module "flag_lambda" {
   ]
 }
 
+# --- Phase 4: Surfacing ---
+
+module "daily_digest_topic" {
+  source     = "../../modules/sns"
+  topic_name = "${var.project_name}-${var.environment}-daily-digest"
+}
+
+module "surfacing_lambda" {
+  source        = "../../modules/lambda"
+  function_name = "${var.project_name}-${var.environment}-surfacing"
+  handler       = "handler.handler"
+  memory_size   = 512
+  timeout       = 60
+
+  environment_variables = {
+    TABLE_NAME             = module.dynamodb.table_name
+    SNS_DIGEST_TOPIC_ARN   = module.daily_digest_topic.topic_arn
+    STALE_DAYS             = "7"
+    MIN_EDGES              = "2"
+    SIMILARITY_THRESHOLD   = "0.85"
+    ENVIRONMENT            = var.environment
+  }
+
+  policy_arns = [
+    module.iam.dynamodb_read_policy_arn,
+  ]
+}
+
+resource "aws_iam_role_policy" "surfacing_sns" {
+  name = "${var.project_name}-${var.environment}-surfacing-sns"
+  role = module.surfacing_lambda.role_name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sns:Publish"
+      Resource = module.daily_digest_topic.topic_arn
+    }]
+  })
+}
+
+module "surfacing_schedule" {
+  source               = "../../modules/eventbridge"
+  rule_name            = "${var.project_name}-${var.environment}-daily-surfacing"
+  schedule_expression  = "cron(0 8 * * ? *)"
+  lambda_arn           = module.surfacing_lambda.function_arn
+  lambda_function_name = module.surfacing_lambda.function_name
+}
+
 # --- AgentCore Gateway (MCP) ---
 
 module "agentcore_gateway" {

@@ -127,7 +127,21 @@ if [ -n "$SLUG" ]; then
   fi
 fi
 
-# --- Summary ---
+# --- Surfacing Lambda ---
+
+echo ""
+echo "📊 Surfacing (Phase 4)"
+
+aws lambda invoke --function-name "${PROJECT}-${ENV}-surfacing" --region "$REGION" \
+  --payload '{"source":"smoke-test","detail-type":"DailySurfacing","detail":{"run_id":"smoke"}}' \
+  --cli-binary-format raw-in-base64-out /tmp/smoke-surfacing.json --no-cli-pager --output text --query 'StatusCode' > /dev/null 2>&1
+SURF_OK=$(python3 -c "import json; d=json.load(open('/tmp/smoke-surfacing.json')); print('200' if 'summary' in d else '500')" 2>/dev/null || echo "?")
+SURF_SUMMARY=$(python3 -c "
+import json; d=json.load(open('/tmp/smoke-surfacing.json'))
+s=d.get('summary',{})
+print(f\"stale={s.get('stale_seeds','?')} orphans={s.get('orphan_nodes','?')} gaps={s.get('content_gaps','?')}\")
+" 2>/dev/null || echo "?")
+check "surfacing digest ($SURF_SUMMARY)" "200" "$SURF_OK"
 
 echo ""
 echo "============================================"

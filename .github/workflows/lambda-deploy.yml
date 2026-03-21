@@ -70,6 +70,9 @@ jobs:
           # Flag Lambda (MCP write tool)
           - function: flag
             handler_dir: functions/flag
+          # Surfacing Lambda (Phase 4)
+          - function: surfacing
+            handler_dir: functions/surfacing
     steps:
       - uses: actions/checkout@v4
 
@@ -142,6 +145,8 @@ jobs:
             handler_dir: functions/connect
           - function: flag
             handler_dir: functions/flag
+          - function: surfacing
+            handler_dir: functions/surfacing
     steps:
       - uses: actions/checkout@v4
 
