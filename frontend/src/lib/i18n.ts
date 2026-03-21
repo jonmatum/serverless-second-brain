@@ -27,6 +27,7 @@ const dict = {
   "home.timeline.desc": { es: "Vista cronol\u00f3gica", en: "Chronological view" },
   "home.capture": { es: "Capturar", en: "Capture" },
   "home.capture.desc": { es: "Ingestar nuevo conocimiento", en: "Ingest new knowledge" },
+  "home.browse": { es: "Explorar por tipo", en: "Browse by type" },
 
   // Types
   "type.concept": { es: "Concepto", en: "Concept" },
@@ -83,6 +84,7 @@ const dict = {
   "listing.sort.edges": { es: "M\u00e1s conectados", en: "Most connected" },
   "listing.sort.alpha": { es: "Alfab\u00e9tico", en: "Alphabetical" },
   "listing.sort": { es: "Ordenar por", en: "Sort by" },
+  "listing.empty": { es: "No hay nodos con estos filtros.", en: "No nodes match these filters." },
 
   // Timeline
   "timeline.title": { es: "Cronolog\u00eda", en: "Timeline" },

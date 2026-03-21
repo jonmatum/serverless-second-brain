@@ -30,34 +30,44 @@ export default function SearchPage() {
   }, [type, status]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold">{t("search.title", locale)}</h1>
+
       <form onSubmit={(e) => { e.preventDefault(); search(query); }} className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search.placeholder", locale)} aria-label={t("search.title", locale)} className="pl-9" />
         </div>
-        <Button type="submit" disabled={loading}>{loading ? "\u2026" : t("search.button", locale)}</Button>
+        <Button type="submit" disabled={loading}>{loading ? "..." : t("search.button", locale)}</Button>
       </form>
+
       <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
-      {error && <p className="text-destructive">{error}</p>}
-      {data && (
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {data ? (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">{t("search.results", locale, { count: data.total, s: data.total !== 1 ? "s" : "", ms: data.took_ms })}</p>
           {data.results.map((r) => (
             <NodeCard key={r.id} id={r.id} title={r.title} summary={localized(r, "summary", locale)} node_type={r.node_type} status={r.status} tags={r.tags} score={r.score} />
           ))}
-          {data.total === 0 && <p className="text-muted-foreground">{t("search.no_results", locale, { q: data.query })}</p>}
+          {data.total === 0 && (
+            <p className="py-8 text-center text-muted-foreground">{t("search.no_results", locale, { q: data.query })}</p>
+          )}
         </div>
-      )}
-      {!data && !loading && (
-        <div className="space-y-2">
+      ) : !loading ? (
+        <div className="space-y-3 py-4">
           <p className="text-sm text-muted-foreground">{t("search.suggestions", locale)}</p>
           <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((s) => <Button key={s} variant="outline" size="sm" onClick={() => { setQuery(s); search(s); }}>{s}</Button>)}
+            {SUGGESTIONS.map((s) => (
+              <button key={s} onClick={() => { setQuery(s); search(s); }}
+                className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                {s}
+              </button>
+            ))}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

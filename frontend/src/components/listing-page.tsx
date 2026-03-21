@@ -28,9 +28,12 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-        <h1 className="text-2xl font-bold">{typeLabel(nodeType, locale)}s</h1>
+    <div className="space-y-5">
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-2xl font-bold">{typeLabel(nodeType, locale)}s</h1>
+          {!loading && <span className="text-sm text-muted-foreground">{sorted.length}</span>}
+        </div>
         <div className="flex items-center gap-2">
           <Select value={status || "_all"} onValueChange={(v: string | null) => setStatus(!v || v === "_all" ? "" : v)}>
             <SelectTrigger className="w-[130px]" aria-label={t("filter.status", locale)}><SelectValue /></SelectTrigger>
@@ -46,16 +49,18 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
               <SelectItem value="title">{t("listing.sort.alpha", locale)}</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-muted-foreground">{sorted.length}</span>
         </div>
       </div>
+
       {loading ? (
-        <p className="text-muted-foreground">{t("common.loading", locale)}</p>
+        <p className="py-12 text-center text-muted-foreground">{t("common.loading", locale)}</p>
+      ) : sorted.length === 0 ? (
+        <p className="py-12 text-center text-muted-foreground">{t("listing.empty", locale)}</p>
       ) : (
         <div className="space-y-2">
           {sorted.map((n) => (
             <NodeCard key={n.id} id={n.id} title={n.title} node_type={n.node_type} status={n.status} tags={n.tags}
-              extra={<span className="ml-auto text-xs text-muted-foreground">{t("dashboard.edges_count", locale, { count: n.edge_count })}</span>} />
+              extra={<span className="ml-auto text-xs text-muted-foreground">{n.edge_count}</span>} />
           ))}
         </div>
       )}

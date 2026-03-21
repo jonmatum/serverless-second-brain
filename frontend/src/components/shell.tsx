@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Menu, X, LogIn, LogOut } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { PrefsMenu } from "@/components/prefs-menu";
 import { t, type DictKey } from "@/lib/i18n";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const NAV_KEYS: { href: string; key: DictKey }[] = [
   { href: "/dashboard", key: "nav.dashboard" },
@@ -39,35 +39,71 @@ function AuthButton() {
 function ShellInner() {
   const { layout, locale } = usePrefs();
   const [open, setOpen] = useState(false);
-  const maxW = layout === "boxed" ? "max-w-6xl" : "";
+  const { pathname } = useLocation();
+  const maxW = layout === "boxed" ? "max-w-5xl" : "";
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <>
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+    <div className="flex min-h-screen flex-col">
+      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
         <div className={`mx-auto flex items-center justify-between px-4 py-3 sm:px-6 ${maxW}`}>
-          <Link to="/" className="text-lg font-semibold tracking-tight" onClick={() => setOpen(false)}>ssb</Link>
-          <div className="hidden items-center gap-5 md:flex">
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              {NAV_KEYS.map((n) => (
-                <Link key={n.href} to={n.href} className="hover:text-foreground transition-colors">{t(n.key, locale)}</Link>
-              ))}
+          <Link to="/" className="text-base font-semibold tracking-tight" onClick={() => setOpen(false)}>
+            ssb
+          </Link>
+
+          {/* Desktop nav */}
+          <div className="hidden items-center gap-1 md:flex">
+            {NAV_KEYS.map((n) => (
+              <Link
+                key={n.href}
+                to={n.href}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                  isActive(n.href)
+                    ? "bg-accent text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                )}
+              >
+                {t(n.key, locale)}
+              </Link>
+            ))}
+            <div className="ml-2 flex items-center gap-1 border-l border-border/50 pl-3">
+              <AuthButton />
+              <PrefsMenu />
             </div>
-            <AuthButton />
-            <PrefsMenu />
           </div>
-          <div className="flex items-center gap-2 md:hidden">
+
+          {/* Mobile controls */}
+          <div className="flex items-center gap-1 md:hidden">
             <AuthButton />
             <PrefsMenu />
-            <button onClick={() => setOpen(!open)} className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent transition-colors" aria-label="Menu">
+            <button
+              onClick={() => setOpen(!open)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent transition-colors"
+              aria-label="Menu"
+            >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
         {open && (
-          <div className="border-t border-border px-4 pb-4 pt-2 md:hidden">
-            <div className="flex flex-col gap-1">
+          <div className="border-t border-border/50 px-4 pb-4 pt-2 md:hidden">
+            <div className="flex flex-col gap-0.5">
               {NAV_KEYS.map((n) => (
-                <Link key={n.href} to={n.href} onClick={() => setOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                <Link
+                  key={n.href}
+                  to={n.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive(n.href)
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                >
                   {t(n.key, locale)}
                 </Link>
               ))}
@@ -75,10 +111,15 @@ function ShellInner() {
           </div>
         )}
       </nav>
-      <main className={`mx-auto px-4 py-6 sm:px-6 sm:py-10 ${maxW}`}><Outlet /></main>
-      <Separator />
-      <footer className="px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">{t("footer", locale)}</footer>
-    </>
+
+      <main className={`mx-auto w-full flex-1 px-4 py-6 sm:px-6 sm:py-10 ${maxW}`}>
+        <Outlet />
+      </main>
+
+      <footer className="border-t border-border/50 px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
+        {t("footer", locale)}
+      </footer>
+    </div>
   );
 }
 

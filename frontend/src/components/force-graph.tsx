@@ -1,7 +1,6 @@
-
 import { useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import * as d3 from "d3";
-import { useRouter } from "next/navigation";
 import type { GraphNode, GraphEdge } from "@/lib/types";
 import { TYPE_COLORS } from "@/lib/constants";
 
@@ -17,19 +16,11 @@ interface SimLink extends d3.SimulationLinkDatum<SimNode> {
   edge_type: string;
 }
 
-interface Props {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-}
-
-export function ForceGraph({ nodes, edges }: Props) {
+export function ForceGraph({ nodes, edges }: { nodes: GraphNode[]; edges: GraphEdge[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
 
-  const navigate = useCallback(
-    (id: string) => router.push(`/node?id=${id}`),
-    [router],
-  );
+  const go = useCallback((id: string) => navigate(`/node?id=${id}`), [navigate]);
 
   useEffect(() => {
     const svg = d3.select(svgRef.current!);
@@ -52,49 +43,30 @@ export function ForceGraph({ nodes, edges }: Props) {
 
     const g = svg.append("g");
 
-    // Zoom
     svg.call(
       d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.2, 5])
         .on("zoom", (e) => g.attr("transform", e.transform)),
     );
 
-    const link = g
-      .append("g")
-      .selectAll("line")
-      .data(simLinks)
-      .join("line")
-      .attr("stroke", "#3f3f46")
-      .attr("stroke-width", 1);
+    const link = g.append("g").selectAll("line").data(simLinks).join("line")
+      .attr("stroke", "currentColor").attr("stroke-opacity", 0.15).attr("stroke-width", 1);
 
-    const node = g
-      .append("g")
-      .selectAll<SVGCircleElement, SimNode>("circle")
-      .data(simNodes)
-      .join("circle")
+    const node = g.append("g").selectAll<SVGCircleElement, SimNode>("circle").data(simNodes).join("circle")
       .attr("r", (d) => 4 + Math.min(d.edge_count, 10))
       .attr("fill", (d) => TYPE_COLORS[d.node_type] ?? "#71717a")
-      .attr("stroke", "#18181b")
-      .attr("stroke-width", 1.5)
+      .attr("stroke", "currentColor").attr("stroke-opacity", 0.3).attr("stroke-width", 1.5)
       .attr("cursor", "pointer")
-      .on("click", (_, d) => navigate(d.id))
+      .on("click", (_, d) => go(d.id))
       .call(drag(sim));
 
-    // Tooltip
     node.append("title").text((d) => d.title);
 
-    // Labels for high-connectivity nodes
-    const labels = g
-      .append("g")
-      .selectAll("text")
-      .data(simNodes.filter((d) => d.edge_count >= 4))
-      .join("text")
+    const labels = g.append("g").selectAll("text")
+      .data(simNodes.filter((d) => d.edge_count >= 4)).join("text")
       .text((d) => d.title)
-      .attr("font-size", 10)
-      .attr("fill", "#a1a1aa")
-      .attr("dx", 10)
-      .attr("dy", 4)
-      .attr("pointer-events", "none");
+      .attr("font-size", 10).attr("fill", "currentColor").attr("fill-opacity", 0.5)
+      .attr("dx", 10).attr("dy", 4).attr("pointer-events", "none");
 
     sim.on("tick", () => {
       link
@@ -107,31 +79,16 @@ export function ForceGraph({ nodes, edges }: Props) {
     });
 
     return () => { sim.stop(); };
-  }, [nodes, edges, navigate]);
+  }, [nodes, edges, go]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="h-[50vh] w-full rounded-lg border border-border bg-background sm:h-[70vh]"
-    />
+    <svg ref={svgRef} className="h-[50vh] w-full rounded-lg border border-border bg-card sm:h-[70vh]" />
   );
 }
 
 function drag(sim: d3.Simulation<SimNode, SimLink>) {
-  return d3
-    .drag<SVGCircleElement, SimNode>()
-    .on("start", (e, d) => {
-      if (!e.active) sim.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    })
-    .on("drag", (e, d) => {
-      d.fx = e.x;
-      d.fy = e.y;
-    })
-    .on("end", (e, d) => {
-      if (!e.active) sim.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    });
+  return d3.drag<SVGCircleElement, SimNode>()
+    .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+    .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+    .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; });
 }
