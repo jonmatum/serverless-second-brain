@@ -19,7 +19,7 @@ export function Filters({ type, status, onTypeChange, onStatusChange }: Props) {
   return (
     <div className="flex flex-wrap gap-3">
       <Select value={type || "_all"} onValueChange={(v: string | null) => onTypeChange(!v || v === "_all" ? "" : v)}>
-        <SelectTrigger className="w-[160px]" aria-label={t("filter.type", locale)}>
+        <SelectTrigger className="w-full sm:w-[160px]" aria-label={t("filter.type", locale)}>
           <SelectValue placeholder={t("filter.all_types", locale)} />
         </SelectTrigger>
         <SelectContent>
@@ -30,7 +30,7 @@ export function Filters({ type, status, onTypeChange, onStatusChange }: Props) {
         </SelectContent>
       </Select>
       <Select value={status || "_all"} onValueChange={(v: string | null) => onStatusChange(!v || v === "_all" ? "" : v)}>
-        <SelectTrigger className="w-[160px]" aria-label={t("filter.status", locale)}>
+        <SelectTrigger className="w-full sm:w-[160px]" aria-label={t("filter.status", locale)}>
           <SelectValue placeholder={t("filter.all_statuses", locale)} />
         </SelectTrigger>
         <SelectContent>
