@@ -56,3 +56,25 @@ output "capture_function_arn" {
 output "capture_invoke_arn" {
   value = module.capture_lambda.invoke_arn
 }
+
+# Interface layer
+output "api_gateway_invoke_url" {
+  value = module.api_gateway.invoke_url
+}
+
+output "api_gateway_id" {
+  value = module.api_gateway.api_id
+}
+
+output "api_gateway_execution_arn" {
+  value = module.api_gateway.api_execution_arn
+}
+
+output "api_key_id" {
+  value = module.api_gateway.api_key_id
+}
+
+output "api_key_value" {
+  value     = module.api_gateway.api_key_value
+  sensitive = true
+}

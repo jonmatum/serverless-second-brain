@@ -72,3 +72,14 @@ module "capture_lambda" {
     module.iam.bedrock_invoke_policy_arn,
   ]
 }
+
+# --- Interface Layer ---
+
+module "api_gateway" {
+  source                       = "../../modules/api-gateway"
+  api_name                     = "${var.project_name}-${var.environment}-api"
+  stage_name                   = var.environment
+  capture_lambda_invoke_arn    = module.capture_lambda.invoke_arn
+  capture_lambda_function_name = module.capture_lambda.function_name
+  cors_allow_origin            = var.cors_allow_origin
+}

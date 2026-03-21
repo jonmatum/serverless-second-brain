@@ -44,3 +44,9 @@ variable "bedrock_embedding_model_id" {
   type        = string
   default     = "amazon.titan-embed-text-v2:0"
 }
+
+variable "cors_allow_origin" {
+  description = "CORS allowed origin for API Gateway"
+  type        = string
+  default     = "*"
+}
