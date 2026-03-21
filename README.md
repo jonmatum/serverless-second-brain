@@ -89,6 +89,8 @@ Scales to zero. No minimum costs beyond S3 storage.
 | Moderate (100 req/day) | ~$2.44 |
 | High (1,000 req/day) | ~$11.21 |
 
+Real cost data from production: [`docs/benchmarks/results.md`](docs/benchmarks/results.md)
+
 ## API
 
 | Method | Endpoint | Description | Auth |
