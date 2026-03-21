@@ -8,6 +8,8 @@
 
 Orchestrate the capture pipeline (validate → classify → persist → create edges) using Step Functions Express Workflow with synchronous execution, triggered by API Gateway.
 
+ASL state names: `ValidateInput → GenerateMetadata → PersistNode → CreateEdges → NotifySuccess` (see `event-schemas.md`).
+
 ## Context
 
 The capture pipeline has 4 sequential steps with different failure modes: input validation (fast, deterministic), Bedrock classification (slow, throttle-prone), DynamoDB persistence (fast, conditional write failures), and edge creation (fast, depends on persistence). The original design was a monolithic Lambda doing all steps sequentially.

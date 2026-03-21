@@ -57,7 +57,7 @@ The jonmatum.com prototype attempted browser-side semantic search using Transfor
 ## Consequences
 
 - Every search query invokes Bedrock Titan (~87ms latency). This is the floor for search latency.
-- The DynamoDB scan reads all EMBED items into Lambda memory. At 178 nodes this is ~160KB and takes ~160ms. At 10K nodes it would be ~8MB — still fits in Lambda memory but scan time becomes the bottleneck (see ADR-008).
+- The DynamoDB scan reads all EMBED items into Lambda memory (see ADR-008 for scaling analysis). At 178 nodes this is ~700KB and takes ~160ms. At 10K nodes it would be ~40MB — still fits in Lambda memory but scan time becomes the bottleneck.
 - Lambda caches embeddings in memory across warm invocations (5-minute TTL). Warm searches skip the DynamoDB scan.
 - The keyword scorer is simple (term matching against fields). It doesn't support stemming, fuzzy matching, or language-specific tokenization. This is acceptable for a personal knowledge base with controlled vocabulary.
 

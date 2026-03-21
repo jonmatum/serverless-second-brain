@@ -20,11 +20,13 @@ Semantic search requires comparing a query embedding against all stored embeddin
 | EMBED items | 178 |
 | Vector size | 1,024 floats × 4 bytes = 4KB per vector |
 | Total embedding data | ~700KB |
-| DynamoDB scan time | ~160ms |
+| DynamoDB scan time (estimated) | ~160ms |
 | Cosine similarity (178 vectors) | ~3ms |
 | Lambda memory cache TTL | 5 minutes |
 
 The entire embedding corpus fits in Lambda memory with room to spare. Warm invocations skip the DynamoDB scan entirely.
+
+Note: the ~160ms scan time is an estimate for EMBED items only. Benchmark 1 measured ~290ms server-side for a full table scan (all item types).
 
 ## Scaling projections
 
