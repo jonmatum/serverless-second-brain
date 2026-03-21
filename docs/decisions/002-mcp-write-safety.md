@@ -1,8 +1,8 @@
 # ADR-002: MCP Write Safety — Quality Controls for Agent Graph Mutations
 
-**Status**: Accepted  
-**Date**: 2026-03-21  
-**Issue**: [#15](https://github.com/jonmatum/serverless-second-brain/issues/15)
+**Status**: Accepted
+**Date**: 2026-03-21
+**Context**: Issue #15, `.kiro/steering/mcp-tools.md`, `.kiro/steering/dynamodb-schema.md`
 
 ## Context
 
@@ -57,7 +57,7 @@ Agents cannot delete nodes or edges. The only destructive action is `flag_stale`
 
 ### Permission tiers
 
-Different agents with different write levels (e.g., capture-only vs. full mutation). Not implemented because there is currently one agent (the MCP runtime). When #17 (OAuth/Cognito) lands, permission tiers can be mapped to OAuth scopes.
+Different agents with different write levels (e.g., capture-only vs. full mutation). Not implemented because there is currently one agent (the MCP runtime). When issue #17 lands (ADR-003: OAuth/Cognito), permission tiers can be mapped to OAuth scopes.
 
 ### Approval queue
 

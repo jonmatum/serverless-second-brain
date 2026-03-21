@@ -1,15 +1,15 @@
 # ADR-003: Authentication and Content Visibility Model
 
-**Status**: Proposed  
-**Date**: 2026-03-21  
-**Issue**: [#17](https://github.com/jonmatum/serverless-second-brain/issues/17)
+**Status**: Proposed
+**Date**: 2026-03-21
+**Context**: Issue #17, `.kiro/steering/api-spec.md`, `.kiro/steering/architecture.md`
 
 ## Context
 
 The system currently has minimal auth:
 - `POST /capture` requires an API key (shared secret)
 - All `GET` endpoints are fully public (no auth)
-- AgentCore Gateway/Runtime uses IAM auth (AWS credentials only)
+- AgentCore Gateway/Runtime uses IAM auth (AWS credentials only, see ADR-007)
 - MCP write tools have no external auth
 
 This is a personal knowledge graph. The owner should be able to choose whether their content is public (portfolio/blog), private (personal notes), or mixed. External agents and frontends need proper authentication.
@@ -50,7 +50,7 @@ Default visibility is configurable per deployment via `var.default_visibility` (
 | REST API reads | Optional JWT — anonymous gets public only, authenticated gets all |
 | MCP write tools | Cognito client credentials (machine-to-machine) |
 | MCP read tools | Optional — anonymous gets public only |
-| CI/CD | OIDC (unchanged) |
+| CI/CD | OIDC (unchanged, see ADR-012) |
 
 ### Cognito setup
 
@@ -103,7 +103,7 @@ Write Lambdas (capture, connect, flag) reject requests without valid auth contex
 The MCP server already passes `actor: "agent:runtime"`. With Cognito:
 - Read tools: work without auth (public content) or with auth (all content)
 - Write tools: require a valid Cognito client credentials token
-- The AgentCore Gateway validates the token before forwarding to the Runtime
+- The AgentCore Gateway (ADR-007) validates the token before forwarding to the Runtime
 
 ### Migration strategy
 
