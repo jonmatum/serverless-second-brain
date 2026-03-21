@@ -53,8 +53,12 @@ output "capture_function_arn" {
   value = module.capture_lambda.function_arn
 }
 
-output "capture_invoke_arn" {
-  value = module.capture_lambda.invoke_arn
+output "capture_pipeline_arn" {
+  value = module.capture_pipeline.state_machine_arn
+}
+
+output "capture_complete_topic_arn" {
+  value = module.capture_complete_topic.topic_arn
 }
 
 # Interface layer

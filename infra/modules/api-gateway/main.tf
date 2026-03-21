@@ -8,13 +8,8 @@ variable "stage_name" {
   type        = string
 }
 
-variable "capture_lambda_invoke_arn" {
-  description = "Invoke ARN of the Capture Lambda"
-  type        = string
-}
-
-variable "capture_lambda_function_name" {
-  description = "Function name of the Capture Lambda (for permission)"
+variable "capture_state_machine_arn" {
+  description = "ARN of the Capture pipeline Step Functions state machine"
   type        = string
 }
 
@@ -57,6 +52,35 @@ resource "aws_api_gateway_rest_api" "this" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+}
+
+# ─── IAM role for API Gateway → Step Functions ───
+
+resource "aws_iam_role" "apigw_sfn" {
+  name = "${var.api_name}-sfn-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "apigateway.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "apigw_sfn" {
+  name = "${var.api_name}-sfn-invoke"
+  role = aws_iam_role.apigw_sfn.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "states:StartSyncExecution"
+      Resource = var.capture_state_machine_arn
+    }]
+  })
 }
 
 # ─── /health (mock) ───
@@ -119,7 +143,7 @@ resource "aws_api_gateway_integration_response" "health_200" {
   }
 }
 
-# ─── /capture (Lambda proxy) ───
+# ─── /capture (Step Functions sync) ───
 
 resource "aws_api_gateway_resource" "capture" {
   rest_api_id = aws_api_gateway_rest_api.this.id
@@ -135,21 +159,97 @@ resource "aws_api_gateway_method" "capture_post" {
   api_key_required = true
 }
 
-resource "aws_api_gateway_integration" "capture_lambda" {
+resource "aws_api_gateway_integration" "capture_sfn" {
   rest_api_id             = aws_api_gateway_rest_api.this.id
   resource_id             = aws_api_gateway_resource.capture.id
   http_method             = aws_api_gateway_method.capture_post.http_method
   integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = var.capture_lambda_invoke_arn
+  type                    = "AWS"
+  uri                     = "arn:aws:apigateway:${data.aws_region.current.name}:states:action/StartSyncExecution"
+  credentials             = aws_iam_role.apigw_sfn.arn
+
+  request_templates = {
+    "application/json" = jsonencode({
+      input           = "$util.escapeJavaScript($input.body)"
+      stateMachineArn = var.capture_state_machine_arn
+    })
+  }
 }
 
-resource "aws_lambda_permission" "apigw_capture" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = var.capture_lambda_function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+data "aws_region" "current" {}
+
+# 201 — success (extract output from Step Functions response)
+resource "aws_api_gateway_method_response" "capture_201" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.capture.id
+  http_method = aws_api_gateway_method.capture_post.http_method
+  status_code = "201"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "capture_201" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.capture.id
+  http_method = aws_api_gateway_method.capture_post.http_method
+  status_code = aws_api_gateway_method_response.capture_201.status_code
+
+  # Match SUCCEEDED status
+  selection_pattern = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'${var.cors_allow_origin}'"
+  }
+
+  # Extract the output field from the Step Functions sync response
+  response_templates = {
+    "application/json" = "$util.parseJson($input.json('$.output'))"
+  }
+}
+
+# 400/500 — failure (extract error from Step Functions response)
+resource "aws_api_gateway_method_response" "capture_500" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.capture.id
+  http_method = aws_api_gateway_method.capture_post.http_method
+  status_code = "500"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "capture_500" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.capture.id
+  http_method = aws_api_gateway_method.capture_post.http_method
+  status_code = aws_api_gateway_method_response.capture_500.status_code
+
+  # Match anything that's not 200
+  selection_pattern = "4\\d{2}|5\\d{2}"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'${var.cors_allow_origin}'"
+  }
+
+  response_templates = {
+    "application/json" = <<-EOF
+#set($cause = $util.parseJson($input.json('$.cause')))
+$cause
+EOF
+  }
+
+  depends_on = [aws_api_gateway_integration_response.capture_201]
 }
 
 # ─── CORS (OPTIONS) for /capture ───
@@ -264,7 +364,7 @@ resource "aws_api_gateway_deployment" "this" {
       aws_api_gateway_method.health_get.id,
       aws_api_gateway_method.capture_post.id,
       aws_api_gateway_integration.health_mock.id,
-      aws_api_gateway_integration.capture_lambda.id,
+      aws_api_gateway_integration.capture_sfn.id,
     ]))
   }
 
@@ -274,9 +374,11 @@ resource "aws_api_gateway_deployment" "this" {
 
   depends_on = [
     aws_api_gateway_integration.health_mock,
-    aws_api_gateway_integration.capture_lambda,
+    aws_api_gateway_integration.capture_sfn,
     aws_api_gateway_integration.capture_options,
     aws_api_gateway_integration.health_options,
+    aws_api_gateway_integration_response.capture_201,
+    aws_api_gateway_integration_response.capture_500,
   ]
 }
 
@@ -295,8 +397,6 @@ resource "aws_api_gateway_stage" "this" {
     format = jsonencode({
       requestId      = "$context.requestId"
       ip             = "$context.identity.sourceIp"
-      caller         = "$context.identity.caller"
-      user           = "$context.identity.user"
       requestTime    = "$context.requestTime"
       httpMethod     = "$context.httpMethod"
       resourcePath   = "$context.resourcePath"
