@@ -143,6 +143,18 @@ print(f\"stale={s.get('stale_seeds','?')} orphans={s.get('orphan_nodes','?')} ga
 " 2>/dev/null || echo "?")
 check "surfacing digest ($SURF_SUMMARY)" "200" "$SURF_OK"
 
+# --- AgentCore Runtime ---
+
+echo ""
+echo "🧠 AgentCore Runtime (Phase 3)"
+
+RUNTIME_ID=$(cd "$(dirname "$0")/../infra/environments/$ENV" && terraform output -raw agentcore_runtime_id 2>/dev/null || echo "")
+if [ -n "$RUNTIME_ID" ]; then
+  check "Runtime deployed ($RUNTIME_ID)" "present" "present"
+else
+  check "Runtime deployed" "present" "missing"
+fi
+
 echo ""
 echo "============================================"
 total=$((pass + fail))
