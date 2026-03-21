@@ -45,6 +45,12 @@ variable "bedrock_embedding_model_id" {
   default     = "amazon.titan-embed-text-v2:0"
 }
 
+variable "digest_email" {
+  description = "Email address for daily digest notifications"
+  type        = string
+  default     = ""
+}
+
 variable "cors_allow_origin" {
   description = "CORS allowed origin for API Gateway"
   type        = string

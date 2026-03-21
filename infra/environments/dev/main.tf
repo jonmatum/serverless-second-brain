@@ -333,8 +333,9 @@ module "flag_lambda" {
 # --- Phase 4: Surfacing ---
 
 module "daily_digest_topic" {
-  source     = "../../modules/sns"
-  topic_name = "${var.project_name}-${var.environment}-daily-digest"
+  source              = "../../modules/sns"
+  topic_name          = "${var.project_name}-${var.environment}-daily-digest"
+  email_subscriptions = var.digest_email != "" ? [var.digest_email] : []
 }
 
 module "surfacing_lambda" {
