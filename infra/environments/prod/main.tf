@@ -199,7 +199,7 @@ module "capture_pipeline" {
         Resource = module.capture_classify.function_arn
         Next     = "PersistNode"
         Retry = [{
-          ErrorEquals     = ["BedrockError", "States.TaskFailed"]
+          ErrorEquals     = ["BedrockError"]
           IntervalSeconds = 2
           MaxAttempts     = 3
           BackoffRate     = 2.0

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Manual smoke test for all Serverless Second Brain endpoints.
+# Smoke test for all Serverless Second Brain endpoints and services.
 # Usage: ./scripts/smoke-test.sh [API_URL]
 #
 # Requires: curl, python3, aws CLI with credentials configured.
@@ -34,21 +34,30 @@ check() {
 echo "============================================"
 echo " Smoke Test — $API_URL"
 echo "============================================"
+
+# ==========================================
+# 1. Health & connectivity
+# ==========================================
 echo ""
-
-# --- Read endpoints (no auth) ---
-
-echo "📖 Read endpoints"
+echo "🏥 Health"
 
 STATUS=$(curl -s -o /tmp/smoke-health.json -w '%{http_code}' "$API_URL/health")
 check "GET /health" "200" "$STATUS"
+
+HEADERS=$(curl -sI "$API_URL/graph" 2>&1)
+echo "$HEADERS" | grep -qi "content-type: application/json" && check "Content-Type: application/json" "present" "present" || check "Content-Type: application/json" "present" "missing"
+
+# ==========================================
+# 2. Read API (Phase 2)
+# ==========================================
+echo ""
+echo "📖 Read API"
 
 STATUS=$(curl -s -o /tmp/smoke-graph.json -w '%{http_code}' --max-time 30 "$API_URL/graph")
 NODES=$(python3 -c "import json; d=json.load(open('/tmp/smoke-graph.json')); print(d['meta']['node_count'])" 2>/dev/null || echo "?")
 EDGES=$(python3 -c "import json; d=json.load(open('/tmp/smoke-graph.json')); print(d['meta']['edge_count'])" 2>/dev/null || echo "?")
 check "GET /graph ($NODES nodes, $EDGES edges)" "200" "$STATUS"
 
-# Pick first node slug from graph
 SLUG=$(python3 -c "import json; print(json.load(open('/tmp/smoke-graph.json'))['nodes'][0]['id'])" 2>/dev/null || echo "")
 if [ -n "$SLUG" ]; then
   STATUS=$(curl -s -o /tmp/smoke-node.json -w '%{http_code}' "$API_URL/nodes/$SLUG")
@@ -67,45 +76,37 @@ check "GET /search?q=serverless ($RESULTS results, ${TOOK}ms)" "200" "$STATUS"
 STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/search")
 check "GET /search (no q → 400)" "400" "$STATUS"
 
-# --- Headers ---
-
+# ==========================================
+# 3. Write API (Phase 1 — capture pipeline)
+# ==========================================
 echo ""
-echo "📋 Response headers"
-
-HEADERS=$(curl -sI "$API_URL/graph" 2>&1)
-echo "$HEADERS" | grep -qi "content-type: application/json" && check "Content-Type: application/json" "present" "present" || check "Content-Type: application/json" "present" "missing"
-
-# --- Write endpoint (needs API key) ---
-
-echo ""
-echo "✏️  Write endpoints"
+echo "✏️  Capture pipeline"
 
 API_KEY=$(cd "$(dirname "$0")/../infra/environments/$ENV" && terraform output -raw api_key_value 2>/dev/null || echo "")
 if [ -z "$API_KEY" ]; then
   echo -e "  ${YELLOW}⏭  Skipping POST /capture — could not read API key from Terraform${NC}"
-  echo "     Run from project root, or pass API key: API_KEY=xxx ./scripts/smoke-test.sh"
 else
   TIMESTAMP=$(date +%s)
-  STATUS=$(curl -s -o /tmp/smoke-capture.json -w '%{http_code}' -X POST "$API_URL/capture" \
+  STATUS=$(curl -s -o /tmp/smoke-capture.json -w '%{http_code}' --max-time 25 -X POST "$API_URL/capture" \
     -H "Content-Type: application/json" \
     -H "x-api-key: $API_KEY" \
     -d "{
-      \"text\": \"Smoke test node created at $TIMESTAMP. This is a temporary node to verify the capture pipeline works end-to-end including Bedrock classification, DynamoDB persistence, S3 body storage, and bidirectional edge creation.\",
+      \"text\": \"Smoke test $TIMESTAMP — verifying the capture pipeline processes text through Bedrock classification, DynamoDB persistence, S3 body storage, and edge creation end-to-end.\",
       \"type\": \"note\",
       \"language\": \"en\"
     }")
   CREATED_SLUG=$(python3 -c "import json; print(json.load(open('/tmp/smoke-capture.json')).get('slug','?'))" 2>/dev/null || echo "?")
   check "POST /capture → $CREATED_SLUG" "201" "$STATUS"
 
-  # Verify the node exists
   if [ "$STATUS" = "201" ] && [ "$CREATED_SLUG" != "?" ]; then
     STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/nodes/$CREATED_SLUG")
     check "GET /nodes/$CREATED_SLUG (verify created)" "200" "$STATUS"
   fi
 fi
 
-# --- MCP write Lambdas (direct invocation) ---
-
+# ==========================================
+# 4. MCP tool Lambdas (Phase 3 — agent door)
+# ==========================================
 echo ""
 echo "🤖 MCP tool Lambdas"
 
@@ -116,7 +117,6 @@ if [ -n "$SLUG" ]; then
   FLAG_STATUS=$(python3 -c "import json; print(json.load(open('/tmp/smoke-flag.json'))['statusCode'])" 2>/dev/null || echo "?")
   check "flag_stale($SLUG)" "200" "$FLAG_STATUS"
 
-  # Connect needs two valid slugs
   SLUG2=$(python3 -c "import json; ns=json.load(open('/tmp/smoke-graph.json'))['nodes']; print(ns[1]['id'] if len(ns)>1 else '')" 2>/dev/null || echo "")
   if [ -n "$SLUG2" ] && [ "$SLUG" != "$SLUG2" ]; then
     aws lambda invoke --function-name "${PROJECT}-${ENV}-connect" --region "$REGION" \
@@ -127,10 +127,18 @@ if [ -n "$SLUG" ]; then
   fi
 fi
 
-# --- Surfacing Lambda ---
+RUNTIME_ID=$(cd "$(dirname "$0")/../infra/environments/$ENV" && terraform output -raw agentcore_runtime_id 2>/dev/null || echo "")
+if [ -n "$RUNTIME_ID" ]; then
+  check "AgentCore Runtime ($RUNTIME_ID)" "present" "present"
+else
+  check "AgentCore Runtime" "present" "missing"
+fi
 
+# ==========================================
+# 5. Surfacing (Phase 4 — proactive)
+# ==========================================
 echo ""
-echo "📊 Surfacing (Phase 4)"
+echo "📊 Surfacing"
 
 aws lambda invoke --function-name "${PROJECT}-${ENV}-surfacing" --region "$REGION" \
   --payload '{"source":"smoke-test","detail-type":"DailySurfacing","detail":{"run_id":"smoke"}}' \
@@ -143,18 +151,9 @@ print(f\"stale={s.get('stale_seeds','?')} orphans={s.get('orphan_nodes','?')} ga
 " 2>/dev/null || echo "?")
 check "surfacing digest ($SURF_SUMMARY)" "200" "$SURF_OK"
 
-# --- AgentCore Runtime ---
-
-echo ""
-echo "🧠 AgentCore Runtime (Phase 3)"
-
-RUNTIME_ID=$(cd "$(dirname "$0")/../infra/environments/$ENV" && terraform output -raw agentcore_runtime_id 2>/dev/null || echo "")
-if [ -n "$RUNTIME_ID" ]; then
-  check "Runtime deployed ($RUNTIME_ID)" "present" "present"
-else
-  check "Runtime deployed" "present" "missing"
-fi
-
+# ==========================================
+# Results
+# ==========================================
 echo ""
 echo "============================================"
 total=$((pass + fail))
@@ -165,7 +164,6 @@ else
 fi
 echo "============================================"
 
-# Cleanup
 rm -f /tmp/smoke-*.json
 
 exit "$fail"
