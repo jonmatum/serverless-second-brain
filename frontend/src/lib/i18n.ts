@@ -1,10 +1,15 @@
 const dict = {
   // Nav
-  "nav.dashboard": { es: "Dashboard", en: "Dashboard" },
+  "nav.dashboard": { es: "Panel", en: "Dashboard" },
   "nav.graph": { es: "Grafo", en: "Graph" },
   "nav.search": { es: "Buscar", en: "Search" },
   "nav.concepts": { es: "Conceptos", en: "Concepts" },
+  "nav.notes": { es: "Notas", en: "Notes" },
+  "nav.experiments": { es: "Experimentos", en: "Experiments" },
+  "nav.essays": { es: "Ensayos", en: "Essays" },
   "nav.timeline": { es: "Cronolog\u00eda", en: "Timeline" },
+  "nav.capture": { es: "Capturar", en: "Capture" },
+  "nav.tools": { es: "Herramientas", en: "Tools" },
 
   // Home
   "home.title": { es: "Second Brain", en: "Second Brain" },

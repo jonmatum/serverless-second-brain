@@ -1,18 +1,23 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Sun, Moon, Maximize, Minimize } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { PrefsMenu } from "@/components/prefs-menu";
 import { t, type DictKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const NAV_KEYS: { href: string; key: DictKey }[] = [
-  { href: "/dashboard", key: "nav.dashboard" },
+  { href: "/concepts", key: "nav.concepts" },
+  { href: "/notes", key: "nav.notes" },
+  { href: "/experiments", key: "nav.experiments" },
+  { href: "/essays", key: "nav.essays" },
+];
+
+const TOOL_KEYS: { href: string; key: DictKey }[] = [
   { href: "/graph", key: "nav.graph" },
   { href: "/search", key: "nav.search" },
-  { href: "/concepts", key: "nav.concepts" },
   { href: "/timeline", key: "nav.timeline" },
+  { href: "/dashboard", key: "nav.dashboard" },
   { href: "/capture", key: "nav.capture" },
 ];
 
@@ -36,6 +41,44 @@ function AuthButton() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, setTheme } = usePrefs();
+  return (
+    <button
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      aria-label={theme === "dark" ? "Light mode" : "Dark mode"}
+    >
+      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
+function LayoutToggle() {
+  const { layout, setLayout } = usePrefs();
+  return (
+    <button
+      onClick={() => setLayout(layout === "boxed" ? "full" : "boxed")}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+      aria-label={layout === "boxed" ? "Full width" : "Boxed"}
+    >
+      {layout === "boxed" ? <Maximize className="h-4 w-4" /> : <Minimize className="h-4 w-4" />}
+    </button>
+  );
+}
+
+function LocaleToggle() {
+  const { locale, setLocale } = usePrefs();
+  return (
+    <button
+      onClick={() => setLocale(locale === "es" ? "en" : "es")}
+      className="inline-flex h-8 items-center justify-center rounded-md px-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+    >
+      {locale === "es" ? "EN" : "ES"}
+    </button>
+  );
+}
+
 function ShellInner() {
   const { layout, locale } = usePrefs();
   const [open, setOpen] = useState(false);
@@ -47,40 +90,62 @@ function ShellInner() {
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
-        <div className={`mx-auto flex items-center justify-between px-4 py-3 sm:px-6 ${maxW}`}>
-          <Link to="/" className="text-base font-semibold tracking-tight" onClick={() => setOpen(false)}>
+        <div className={`mx-auto flex items-center justify-between gap-4 px-4 py-3 sm:px-6 ${maxW}`}>
+          {/* Logo */}
+          <Link to="/" className="text-base font-semibold tracking-tight shrink-0" onClick={() => setOpen(false)}>
             ssb
           </Link>
 
-          {/* Desktop nav */}
+          {/* Desktop nav — content types */}
           <div className="hidden items-center gap-1 md:flex">
             {NAV_KEYS.map((n) => (
               <Link
                 key={n.href}
                 to={n.href}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                  "rounded-md px-2.5 py-1.5 text-sm transition-colors",
                   isActive(n.href)
-                    ? "bg-accent text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {t(n.key, locale)}
               </Link>
             ))}
-            <div className="ml-2 flex items-center gap-1 border-l border-border/50 pl-3">
+          </div>
+
+          {/* Desktop right side — tools + controls */}
+          <div className="hidden items-center gap-1 md:flex">
+            {TOOL_KEYS.map((n) => (
+              <Link
+                key={n.href}
+                to={n.href}
+                className={cn(
+                  "rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                  isActive(n.href)
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t(n.key, locale)}
+              </Link>
+            ))}
+            <div className="ml-1 flex items-center border-l border-border/50 pl-2">
               <AuthButton />
-              <PrefsMenu />
+              <ThemeToggle />
+              <LayoutToggle />
+              <LocaleToggle />
             </div>
           </div>
 
           {/* Mobile controls */}
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-0.5 md:hidden">
             <AuthButton />
-            <PrefsMenu />
+            <ThemeToggle />
+            <LocaleToggle />
             <button
               onClick={() => setOpen(!open)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent transition-colors"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               aria-label="Menu"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -91,22 +156,41 @@ function ShellInner() {
         {/* Mobile menu */}
         {open && (
           <div className="border-t border-border/50 px-4 pb-4 pt-2 md:hidden">
-            <div className="flex flex-col gap-0.5">
-              {NAV_KEYS.map((n) => (
-                <Link
-                  key={n.href}
-                  to={n.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive(n.href)
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                  )}
-                >
-                  {t(n.key, locale)}
-                </Link>
-              ))}
+            <p className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("home.browse", locale)}</p>
+            {NAV_KEYS.map((n) => (
+              <Link
+                key={n.href}
+                to={n.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "block rounded-md px-3 py-2.5 text-sm transition-colors",
+                  isActive(n.href)
+                    ? "text-foreground font-medium bg-accent"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {t(n.key, locale)}
+              </Link>
+            ))}
+            <p className="px-3 pb-1 pt-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("nav.tools", locale)}</p>
+            {TOOL_KEYS.map((n) => (
+              <Link
+                key={n.href}
+                to={n.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "block rounded-md px-3 py-2.5 text-sm transition-colors",
+                  isActive(n.href)
+                    ? "text-foreground font-medium bg-accent"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                {t(n.key, locale)}
+              </Link>
+            ))}
+            <div className="mt-3 flex items-center gap-1 border-t border-border/50 px-3 pt-3">
+              <LayoutToggle />
+              <span className="text-xs text-muted-foreground">{t(layout === "boxed" ? "prefs.boxed" : "prefs.full", locale)}</span>
             </div>
           </div>
         )}
@@ -116,8 +200,11 @@ function ShellInner() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-border/50 px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
-        {t("footer", locale)}
+      <footer className={`mx-auto w-full border-t border-border/50 px-4 py-6 sm:px-6 ${maxW}`}>
+        <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+          <span>{t("footer", locale)}</span>
+          <span className="text-muted-foreground/60">alpha</span>
+        </div>
       </footer>
     </div>
   );
