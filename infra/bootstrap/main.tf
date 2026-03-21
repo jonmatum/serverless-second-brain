@@ -78,6 +78,91 @@ resource "aws_dynamodb_table" "lock" {
   }
 }
 
+variable "github_repo" {
+  description = "GitHub repository (owner/name) for OIDC trust"
+  type        = string
+  default     = "jonmatum/serverless-second-brain"
+}
+
+# GitHub Actions OIDC role
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+resource "aws_iam_role" "github_actions" {
+  name = "${var.project_name}-github-actions"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = data.aws_iam_openid_connect_provider.github.arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+        }
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "github_actions" {
+  name = "${var.project_name}-github-actions"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Terraform"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:*",
+          "s3:*",
+          "lambda:*",
+          "iam:*",
+          "apigateway:*",
+          "states:*",
+          "events:*",
+          "sns:*",
+          "logs:*",
+          "cloudfront:*",
+          "bedrock:*",
+          "sagemaker:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "TerraformState"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem"
+        ]
+        Resource = [
+          aws_s3_bucket.state.arn,
+          "${aws_s3_bucket.state.arn}/*",
+          aws_dynamodb_table.lock.arn
+        ]
+      }
+    ]
+  })
+}
+
+output "github_actions_role_arn" {
+  value = aws_iam_role.github_actions.arn
+}
+
 output "state_bucket" {
   value = aws_s3_bucket.state.bucket
 }
