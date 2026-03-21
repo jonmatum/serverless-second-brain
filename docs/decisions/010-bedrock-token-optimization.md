@@ -36,7 +36,7 @@ At 10,000 nodes, the slug list alone would be ~300K tokens per invocation — $0
 
 - Validate step checks for exact duplicate via DynamoDB `GetItem` (O(1), no LLM needed)
 - Classify step receives 20 most recent slugs as cross-reference hints
-- Reduces input tokens from ~6,764 to ~1,500 (78% reduction)
+- Reduces input tokens from ~6,764 to ~1,500 (~78% reduction)
 - Cross-reference quality may decrease slightly for older concepts
 
 ### Option 3: Bloom filter for duplicate detection
@@ -57,7 +57,7 @@ At 10,000 nodes, the slug list alone would be ~300K tokens per invocation — $0
 
 1. **Duplicate detection doesn't need LLM**: the validate step already does a DynamoDB `GetItem` by slug. If the slug exists, it rejects the capture. No need to pass all slugs to Claude for this.
 2. **Cross-reference hints are best-effort**: Claude suggests related concepts from the slug list, but the suggestions are reviewed by the human door (seed status). Missing a cross-reference is low-cost; paying $0.90 per capture is high-cost.
-3. **81% cost reduction**: from $0.027 to ~$0.005 per capture. At development rate, from $93.82/month to ~$18/month.
+3. **~81% cost reduction**: from $0.027 to ~$0.005 per capture. At development rate, from $93.82/month to ~$18/month.
 
 ## Impact
 
