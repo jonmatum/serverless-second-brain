@@ -8,6 +8,8 @@ variable "environment" {
   type        = string
 }
 
+data "aws_caller_identity" "current" {}
+
 variable "dynamodb_table_arn" {
   description = "DynamoDB table ARN"
   type        = string
@@ -125,9 +127,12 @@ resource "aws_iam_policy" "bedrock_invoke" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["bedrock:InvokeModel"]
-        Resource = "arn:aws:bedrock:*::foundation-model/*"
+        Effect = "Allow"
+        Action = ["bedrock:InvokeModel"]
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/*",
+          "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*"
+        ]
       }
     ]
   })

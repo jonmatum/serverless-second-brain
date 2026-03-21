@@ -84,11 +84,18 @@ jobs:
       - name: Package Lambda
         run: |
           mkdir -p package
-          # Preserve full directory structure so relative imports work
-          # e.g. functions/capture/steps/validate.js imports ../../../shared/
-          cp -r src/dist/${{ matrix.handler_dir }} package/${{ matrix.handler_dir }}
+          # Flat structure — handler files at root, shared alongside
+          cp -r src/dist/${{ matrix.handler_dir }}/* package/
           mkdir -p package/shared
           cp -r src/dist/shared/* package/shared/
+          # Fix imports: root files ../../shared/ → ./shared/
+          find package -maxdepth 1 -name '*.js' -exec sed -i 's|\.\./\.\./shared/|./shared/|g' {} +
+          # Fix imports: steps/ files ../../../shared/ → ../shared/
+          if [ -d package/steps ]; then
+            find package/steps -name '*.js' -exec sed -i 's|\.\./\.\./\.\./shared/|../shared/|g' {} +
+          fi
+          # ESM support
+          echo '{"type":"module"}' > package/package.json
           cp -r src/node_modules package/
           cd package && zip -r ../deploy.zip .
 
