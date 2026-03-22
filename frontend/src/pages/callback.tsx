@@ -6,5 +6,5 @@ export default function Callback() {
     if (code) sessionStorage.setItem("ssb-auth-code", code);
     window.location.replace("/");
   }, []);
-  return <p className="text-muted-foreground">Redirecting...</p>;
+  return <p className="text-sm text-[var(--color-muted)]">Redirecting...</p>;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn } from "lucide-react";
+import { LogIn, Send } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { usePrefs } from "@/lib/prefs";
 import { api } from "@/lib/api";
@@ -24,13 +24,15 @@ export default function Capture() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16">
+      <div className="space-y-6">
         <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
-        <p className="text-[var(--color-muted)] text-center max-w-sm">{t("capture.login_required", locale)}</p>
-        <button onClick={login} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80">
-          <LogIn className="h-4 w-4" />
-          {t("auth.login", locale)}
-        </button>
+        <div className="rounded-lg border border-[var(--color-border)] p-8 text-center space-y-4">
+          <p className="text-sm text-[var(--color-muted)]">{t("capture.login_required", locale)}</p>
+          <button onClick={login} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80">
+            <LogIn className="h-4 w-4" />
+            {t("auth.login", locale)}
+          </button>
+        </div>
       </div>
     );
   }
@@ -53,12 +55,12 @@ export default function Capture() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
 
       {result && (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4 space-y-3">
-          <p className="text-sm font-medium text-green-700 dark:text-green-400">{t("capture.success", locale)}</p>
+        <div className="rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)]/5 p-4 space-y-3">
+          <p className="text-sm font-medium text-[var(--color-accent)]">{t("capture.success", locale)}</p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{result.title}</span>
             <TypeBadge type={result.node_type} /><StatusBadge status={result.status} />
@@ -70,7 +72,7 @@ export default function Capture() {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="rounded-xl border border-[var(--color-border)] p-4 sm:p-6">
+      <div className="rounded-lg border border-[var(--color-border)] p-4 sm:p-6">
         <form onSubmit={submit} className="space-y-5">
           <div className="space-y-1.5">
             <label htmlFor="capture-text" className="text-sm font-medium">{t("capture.text_label", locale)}</label>
@@ -105,7 +107,8 @@ export default function Capture() {
           </div>
 
           <button type="submit" disabled={!valid || loading}
-            className="rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-50">
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-50">
+            <Send className="h-4 w-4" />
             {loading ? t("capture.submitting", locale) : t("capture.submit", locale)}
           </button>
         </form>
