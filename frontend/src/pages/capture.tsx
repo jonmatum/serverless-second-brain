@@ -1,27 +1,41 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, Send, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
+import { LogIn, Send, Loader2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { usePrefs } from "@/lib/prefs";
 import { api } from "@/lib/api";
-import { t } from "@/lib/i18n";
+import { t, localized } from "@/lib/i18n";
 import { TypeBadge, StatusBadge, TagList } from "@/components/badges";
 
-const TYPES = ["concept", "note", "experiment", "essay"];
+interface CaptureResult {
+  slug: string;
+  title: string;
+  title_es?: string;
+  title_en?: string;
+  summary_es?: string;
+  summary_en?: string;
+  node_type: string;
+  status: string;
+  tags: string[];
+}
 
-interface CaptureResult { slug: string; title: string; node_type: string; status: string; tags: string[]; }
+interface Message {
+  id: string;
+  text: string;
+  result?: CaptureResult;
+  error?: string;
+  loading?: boolean;
+}
 
 export default function Capture() {
   const { user, token, setShowLogin } = useAuth();
   const { locale } = usePrefs();
   const [text, setText] = useState("");
-  const [url, setUrl] = useState("");
-  const [type, setType] = useState("concept");
-  const [visibility, setVisibility] = useState<"public" | "private">("private");
-  const [lang, setLang] = useState<"es" | "en">(locale as "es" | "en");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<CaptureResult | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   if (!user) {
     return (
@@ -40,112 +54,119 @@ export default function Capture() {
 
   const charCount = text.length;
   const valid = charCount >= 50;
-  const progress = Math.min(charCount / 50, 1);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function send() {
     if (!valid || !token) return;
-    setLoading(true); setError(""); setResult(null);
+    const input = text.trim();
+    const id = Date.now().toString();
+    setText("");
+    setMessages((m) => [...m, { id, text: input, loading: true }]);
+
     try {
-      const raw = await api.capture({ text, url: url || undefined, type, visibility, language: lang }, token);
-      const node = typeof raw === "string" ? JSON.parse(raw) : raw;
-      setResult(node); setText(""); setUrl("");
+      const raw = await api.capture({ text: input, visibility: "private", language: locale }, token);
+      const node = (typeof raw === "string" ? JSON.parse(raw) : raw) as CaptureResult;
+      setMessages((m) => m.map((msg) => msg.id === id ? { ...msg, loading: false, result: node } : msg));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error";
       if (msg.includes("401")) { setShowLogin(true); return; }
-      setError(msg);
-    } finally { setLoading(false); }
+      setMessages((m) => m.map((msg2) => msg2.id === id ? { ...msg2, loading: false, error: msg } : msg2));
+    }
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send(); }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4">
         <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
         <span className="truncate text-xs text-[var(--color-muted)]">{user.email}</span>
       </div>
 
-      {result && (
-        <div className="rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)]/5 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-[var(--color-accent)]" />
-            <p className="text-sm font-medium text-[var(--color-accent)]">{t("capture.success", locale)}</p>
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+        {messages.length === 0 && (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-sm text-[var(--color-muted)]">{t("capture.empty", locale)}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{result.title}</span>
-            <TypeBadge type={result.node_type} /><StatusBadge status={result.status} />
-          </div>
-          <div className="flex flex-wrap gap-2"><TagList tags={result.tags} /></div>
-          <Link to={`/node?id=${result.slug}`} className="inline-flex items-center gap-1 text-sm text-[var(--color-accent)] hover:underline">
-            {t("capture.view_node", locale)} <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-      )}
+        )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-
-      <div className="rounded-lg border border-[var(--color-border)] p-4 sm:p-6">
-        <form onSubmit={submit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label htmlFor="capture-text" className="text-sm font-medium">{t("capture.text_label", locale)}</label>
-            <textarea id="capture-text" value={text} onChange={(e) => setText(e.target.value)} rows={4} disabled={loading}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] resize-y disabled:opacity-50"
-              placeholder={t("capture.text_placeholder", locale)} />
-            <div className="flex items-center gap-2">
-              <div className="h-1 flex-1 rounded-full bg-[var(--color-border)] overflow-hidden">
-                <div className={`h-full rounded-full transition-all ${valid ? "bg-[var(--color-accent)]" : "bg-[var(--color-muted)]"}`} style={{ width: `${progress * 100}%` }} />
+        {messages.map((msg) => (
+          <div key={msg.id} className="space-y-2">
+            {/* User message */}
+            <div className="flex justify-end">
+              <div className="max-w-[85%] rounded-lg bg-[var(--color-fg)] px-3 py-2 text-sm text-[var(--color-bg)]">
+                <p className="whitespace-pre-wrap">{msg.text}</p>
               </div>
-              <span className={`text-xs tabular-nums ${valid ? "text-[var(--color-muted)]" : "text-red-500"}`}>{charCount}/50</span>
             </div>
+
+            {/* Response */}
+            {msg.loading && (
+              <div className="flex items-center gap-2 text-sm text-[var(--color-muted)]">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("capture.submitting", locale)}
+              </div>
+            )}
+
+            {msg.error && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm text-red-500">
+                {msg.error}
+              </div>
+            )}
+
+            {msg.result && (
+              <div className="max-w-[85%] rounded-lg border border-[var(--color-border)] p-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-sm">{localized(msg.result, "title", locale) || msg.result.title}</span>
+                  <TypeBadge type={msg.result.node_type} />
+                  <StatusBadge status={msg.result.status} />
+                </div>
+                {(msg.result.summary_es || msg.result.summary_en) && (
+                  <p className="text-xs text-[var(--color-muted)] line-clamp-2">
+                    {localized(msg.result, "summary", locale)}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-1"><TagList tags={msg.result.tags} /></div>
+                <Link to={`/node?id=${msg.result.slug}`} className="inline-flex items-center gap-1 text-xs text-[var(--color-accent)] hover:underline">
+                  {t("capture.view_node", locale)} <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            )}
           </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="capture-url" className="text-sm font-medium">{t("capture.url_label", locale)} <span className="font-normal text-[var(--color-muted)]">({t("capture.optional", locale)})</span></label>
-            <input id="capture-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." disabled={loading}
-              className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+      {/* Input area */}
+      <div className="border-t border-[var(--color-border)] pt-3">
+        <div className="flex items-end gap-2">
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={onKeyDown}
+              rows={2}
+              className="w-full resize-none rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 pr-10 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
+              placeholder={t("capture.chat_placeholder", locale)}
+            />
+            <button
+              onClick={send}
+              disabled={!valid}
+              className="absolute bottom-2 right-2 rounded-md p-1 text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)] disabled:opacity-30 disabled:cursor-default cursor-pointer"
+              aria-label={t("capture.submit", locale)}
+            >
+              <Send className="h-4 w-4" />
+            </button>
           </div>
-
-          <fieldset className="space-y-1.5" disabled={loading}>
-              <legend className="text-sm font-medium">{t("capture.type_label", locale)}</legend>
-              <div className="flex flex-wrap gap-1.5" role="radiogroup">
-                {TYPES.map((tp) => (
-                  <button key={tp} type="button" role="radio" aria-checked={type === tp} onClick={() => setType(tp)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors ${type === tp ? "border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]" : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}>
-                    {t(`type.${tp}` as Parameters<typeof t>[0], locale)}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-          <fieldset className="space-y-1.5" disabled={loading}>
-              <legend className="text-sm font-medium">{t("capture.visibility_label", locale)}</legend>
-              <div className="flex flex-wrap gap-1.5" role="radiogroup">
-                {(["public", "private"] as const).map((v) => (
-                  <button key={v} type="button" role="radio" aria-checked={visibility === v} onClick={() => setVisibility(v)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors ${visibility === v ? "border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]" : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}>
-                    {t(`visibility.${v}` as Parameters<typeof t>[0], locale)}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-          <fieldset className="space-y-1.5" disabled={loading}>
-              <legend className="text-sm font-medium">{t("capture.lang_label", locale)}</legend>
-              <div className="flex flex-wrap gap-1.5" role="radiogroup">
-                {(["es", "en"] as const).map((l) => (
-                  <button key={l} type="button" role="radio" aria-checked={lang === l} onClick={() => setLang(l)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium cursor-pointer transition-colors ${lang === l ? "border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]" : "border-[var(--color-border)] text-[var(--color-muted)] hover:border-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}>
-                    {l === "es" ? "Español" : "English"}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-
-          <button type="submit" disabled={!valid || loading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2.5 text-sm font-medium text-[var(--color-bg)] cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-default sm:w-auto">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            {loading ? t("capture.submitting", locale) : t("capture.submit", locale)}
-          </button>
-        </form>
+        </div>
+        <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-muted)]">
+          <span className={charCount >= 50 ? "" : "text-red-500"}>{charCount}/50</span>
+          <span>·</span>
+          <span>{t("visibility.private", locale).toLowerCase()}</span>
+        </div>
       </div>
     </div>
   );

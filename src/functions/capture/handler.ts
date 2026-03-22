@@ -26,7 +26,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const metadata = await classify(input.text, recentSlugs, input.language ?? "es");
     const slug = generateSlug(metadata.title);
     const now = new Date().toISOString();
-    const nodeType = input.type ?? "concept";
+    const validTypes = ["concept", "note", "experiment", "essay"];
+    const detectedType = metadata.node_type && validTypes.includes(metadata.node_type) ? metadata.node_type : "concept";
+    const nodeType = input.type ?? detectedType;
     const actor = input.actor ?? "human";
 
     // Check duplicate

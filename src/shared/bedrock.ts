@@ -55,19 +55,23 @@ export async function classify(
 Text:
 ${text}${slugHint}
 
-Input language: ${language}
+Input language hint: ${language}
 
 Respond with ONLY valid JSON matching this schema:
 {
+  "node_type": "concept | note | experiment | essay",
   "title": "short title in the content's primary language",
 ${langFields},
   "body_es": "well-structured MDX content in Spanish (3-6 paragraphs, use ## headings if needed)",
   "body_en": "well-structured MDX content in English (3-6 paragraphs, use ## headings if needed)",
   "tags": ["tag1", "tag2", "tag3"],
-  "concepts": ["existing-slug-1", "existing-slug-2"]
+  "concepts": ["existing-slug-1", "existing-slug-2"],
+  "detected_language": "es | en"
 }
 
 Rules:
+- node_type: classify as "concept" (reusable idea/pattern), "note" (observation/snippet), "experiment" (project/trial), or "essay" (long-form argument)
+- detected_language: detect the actual language of the input text
 - The input text is an instruction/idea — expand it into proper knowledge content
 - body_es/body_en: well-written MDX, 200-600 words each, technical and specific, seed-quality (not polished)
 - tags: 3-7 lowercase hyphenated tags

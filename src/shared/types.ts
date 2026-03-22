@@ -78,6 +78,8 @@ export interface CaptureResponse {
 
 // Bedrock classification output
 export interface ClassificationResult {
+  node_type?: string;
+  detected_language?: string;
   title: string;
   title_es: string;
   title_en: string;
