@@ -296,3 +296,18 @@ main {
 .dark .prose th {
   --color-code-bg: #161616;
 }
+
+/* Images — responsive, rounded, matching jonmatum.com */
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+.prose figure {
+  margin: 0;
+}
+
+/* Video embeds — responsive 16:9 */
+.prose iframe {
+  border: 0;
+}
