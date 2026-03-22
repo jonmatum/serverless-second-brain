@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { GraphResponse } from "@/lib/types";
 import { ForceGraph } from "@/components/force-graph";
-import { Filters } from "@/components/filters";
 import { TYPE_COLORS } from "@/lib/constants";
 import { t, typeLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
@@ -10,12 +9,10 @@ import { usePrefs } from "@/lib/prefs";
 export default function Graph() {
   const { locale } = usePrefs();
   const [data, setData] = useState<GraphResponse | null>(null);
-  const [type, setType] = useState("");
-  const [status, setStatus] = useState("");
 
   useEffect(() => {
-    api.graph({ type: type || undefined, status: status || undefined }).then(setData).catch(() => {});
-  }, [type, status]);
+    api.graph().then(setData).catch(() => {});
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -33,8 +30,6 @@ export default function Graph() {
           </span>
         ))}
       </div>
-
-      <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
 
       {data ? <ForceGraph nodes={data.nodes} edges={data.edges} /> : <div className="h-[60vh] animate-pulse rounded-lg border border-[var(--color-border)] bg-[var(--color-border)]" />}
     </div>
