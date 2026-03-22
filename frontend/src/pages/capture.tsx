@@ -177,18 +177,17 @@ export default function Capture() {
 
       {/* Input — fixed at bottom */}
       <div className="shrink-0 border-t border-[var(--color-border)] pt-3">
-        <div className="relative">
+        <div className="flex items-end gap-2">
           <textarea
             value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} rows={2}
-            className="w-full resize-none rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 pr-10 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
+            className="min-h-[2.5rem] flex-1 resize-none rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
             placeholder={t("capture.chat_placeholder", locale)}
           />
           <button onClick={send} disabled={!valid} aria-label={t("capture.submit", locale)}
-            className="absolute bottom-2 right-2 rounded-md p-1 text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)] disabled:opacity-30 disabled:cursor-default cursor-pointer">
+            className="mb-0.5 shrink-0 rounded-lg bg-[var(--color-fg)] p-2 text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-30 disabled:cursor-default cursor-pointer">
             <Send className="h-4 w-4" />
           </button>
         </div>
-        <span className={`mt-1 block text-xs ${text.length >= 50 ? "text-[var(--color-muted)]" : "text-red-500"}`}>{text.length}/50</span>
       </div>
     </div>
   );
