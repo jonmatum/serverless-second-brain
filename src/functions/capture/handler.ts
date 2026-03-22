@@ -54,8 +54,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       created_at: now,
       updated_at: now,
       created_by: actor,
-      word_count_es: input.language === "es" ? input.text.split(/\s+/).length : 0,
-      word_count_en: input.language === "en" ? input.text.split(/\s+/).length : 0,
+      word_count_es: (metadata.body_es || "").split(/\s+/).filter(Boolean).length,
+      word_count_en: (metadata.body_en || "").split(/\s+/).filter(Boolean).length,
     };
 
     try {
@@ -67,8 +67,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       throw err;
     }
 
-    // Write body to S3
-    await putBody(nodeType, slug, input.text, input.language ?? "es");
+    // Write body to S3 (Bedrock-generated content, both languages)
+    const bodyEs = metadata.body_es || input.text;
+    const bodyEn = metadata.body_en || input.text;
+    await putBody(nodeType, slug, bodyEs, "es");
+    await putBody(nodeType, slug, bodyEn, "en");
 
     // Write edges for suggested cross-references
     for (const target of metadata.concepts) {

@@ -83,6 +83,8 @@ export interface ClassificationResult {
   title_en: string;
   summary_es: string;
   summary_en: string;
+  body_es: string;
+  body_en: string;
   tags: string[];
   concepts: string[];
 }

@@ -50,7 +50,7 @@ export async function classify(
     ? `\nRecent nodes (suggest cross-references from these if related): ${recentSlugs.join(", ")}`
     : "";
 
-  const defaultPrompt = `You are a knowledge graph classifier. Given the following text, generate structured metadata for a knowledge node.
+  const defaultPrompt = `You are a knowledge graph classifier and content writer. Given the following text (which is a rough instruction or idea), generate structured metadata AND proper bilingual content for a knowledge node.
 
 Text:
 ${text}${slugHint}
@@ -61,15 +61,20 @@ Respond with ONLY valid JSON matching this schema:
 {
   "title": "short title in the content's primary language",
 ${langFields},
+  "body_es": "well-structured MDX content in Spanish (3-6 paragraphs, use ## headings if needed)",
+  "body_en": "well-structured MDX content in English (3-6 paragraphs, use ## headings if needed)",
   "tags": ["tag1", "tag2", "tag3"],
   "concepts": ["existing-slug-1", "existing-slug-2"]
 }
 
 Rules:
+- The input text is an instruction/idea — expand it into proper knowledge content
+- body_es/body_en: well-written MDX, 200-600 words each, technical and specific, seed-quality (not polished)
 - tags: 3-7 lowercase hyphenated tags
 - concepts: only slugs from the recent nodes list that are genuinely related (empty array if none match)
 - summaries: concrete and specific, not generic
-- title: concise, no articles`;
+- title: concise, no articles
+- Use correct Spanish orthography (accents/tildes) in all Spanish fields`;
 
   const prompt = CLASSIFY_PROMPT_OVERRIDE || defaultPrompt;
 
@@ -77,7 +82,7 @@ Rules:
     modelId: MODEL_ID,
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 1024,
+      max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     }),
   });
