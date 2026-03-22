@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, Send, ArrowRight, Globe, Lock } from "lucide-react";
+import { LogIn, Send, ArrowRight, Globe, Lock, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { usePrefs } from "@/lib/prefs";
 import { api } from "@/lib/api";
@@ -129,10 +129,11 @@ export default function Capture() {
       </div>
 
       {/* Messages — scrollable */}
-      <div className="min-h-0 flex-1 overflow-y-auto space-y-4 pb-4">
+      <div className="min-h-0 flex-1 overflow-y-auto space-y-4 rounded-lg border border-[var(--color-border)] p-4">
         {messages.length === 0 && (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-[var(--color-muted)]">{t("capture.empty", locale)}</p>
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-[var(--color-muted)]">
+            <BookOpen className="h-8 w-8 opacity-40" />
+            <p className="text-sm">{t("capture.empty", locale)}</p>
           </div>
         )}
 
