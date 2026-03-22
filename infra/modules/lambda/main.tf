@@ -45,6 +45,12 @@ variable "log_retention_days" {
   default     = 14
 }
 
+variable "enable_dlq" {
+  description = "Create an SQS dead-letter queue for async invocation failures"
+  type        = bool
+  default     = false
+}
+
 # IAM role
 resource "aws_iam_role" "this" {
   name = "${var.function_name}-role"
@@ -76,6 +82,27 @@ resource "aws_cloudwatch_log_group" "this" {
   retention_in_days = var.log_retention_days
 }
 
+# Dead-letter queue (optional)
+resource "aws_sqs_queue" "dlq" {
+  count                     = var.enable_dlq ? 1 : 0
+  name                      = "${var.function_name}-dlq"
+  message_retention_seconds = 1209600 # 14 days
+}
+
+resource "aws_iam_role_policy" "dlq" {
+  count = var.enable_dlq ? 1 : 0
+  name  = "${var.function_name}-dlq"
+  role  = aws_iam_role.this.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sqs:SendMessage"
+      Resource = aws_sqs_queue.dlq[0].arn
+    }]
+  })
+}
+
 # Lambda function
 resource "aws_lambda_function" "this" {
   function_name = var.function_name
@@ -91,6 +118,13 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = var.environment_variables
+  }
+
+  dynamic "dead_letter_config" {
+    for_each = var.enable_dlq ? [1] : []
+    content {
+      target_arn = aws_sqs_queue.dlq[0].arn
+    }
   }
 
   tracing_config {
@@ -129,4 +163,8 @@ output "invoke_arn" {
 
 output "role_name" {
   value = aws_iam_role.this.name
+}
+
+output "dlq_arn" {
+  value = var.enable_dlq ? aws_sqs_queue.dlq[0].arn : ""
 }

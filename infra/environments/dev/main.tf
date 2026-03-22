@@ -63,6 +63,7 @@ locals {
     NODE_TYPES                 = join(",", var.node_types)
     LANGUAGES                  = var.languages
     DEFAULT_VISIBILITY         = var.default_visibility
+    CORS_ALLOW_ORIGIN          = var.cors_allow_origin
   }
   capture_policies = [
     module.iam.dynamodb_write_policy_arn,
@@ -71,7 +72,7 @@ locals {
   ]
 }
 
-# Monolithic handler (kept for direct invocation / testing)
+# Monolithic handler — primary capture path (API Gateway Lambda proxy)
 module "capture_lambda" {
   source                = "../../modules/lambda"
   function_name         = "${var.project_name}-${var.environment}-capture"
@@ -80,6 +81,7 @@ module "capture_lambda" {
   timeout               = 30
   environment_variables = local.capture_env
   policy_arns           = local.capture_policies
+  enable_dlq            = true
 }
 
 # Step function handlers — same code package, different entry points

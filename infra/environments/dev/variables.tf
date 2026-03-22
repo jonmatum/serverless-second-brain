@@ -54,7 +54,7 @@ variable "digest_email" {
 variable "cors_allow_origin" {
   description = "CORS allowed origin for API Gateway"
   type        = string
-  default     = "*"
+  default     = "https://d3k7drew8lusx6.cloudfront.net"
 }
 
 variable "languages" {

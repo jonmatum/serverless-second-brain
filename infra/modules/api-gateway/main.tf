@@ -607,6 +607,7 @@ resource "aws_api_gateway_deployment" "this" {
       var.authorizer_lambda_invoke_arn,
       var.enable_search,
       var.enable_graph,
+      var.cors_allow_origin,
     ]))
   }
 

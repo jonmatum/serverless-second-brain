@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setToken(null);
     refreshTokenRef.current = null;
-    localStorage.removeItem("ssb-refresh");
+    sessionStorage.removeItem("ssb-refresh");
     clearTimeout(timerRef.current);
   }, []);
 
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(accessToken);
     if (refreshToken) {
       refreshTokenRef.current = refreshToken;
-      localStorage.setItem("ssb-refresh", refreshToken);
+      sessionStorage.setItem("ssb-refresh", refreshToken);
     }
     try {
       const claims = decodeJwt(accessToken);
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session from stored refresh token
   useEffect(() => {
-    const rt = localStorage.getItem("ssb-refresh");
+    const rt = sessionStorage.getItem("ssb-refresh");
     if (rt && CLIENT_ID && userPoolId()) {
       refreshTokenRef.current = rt;
       refreshAuth(rt).finally(() => setLoading(false));
