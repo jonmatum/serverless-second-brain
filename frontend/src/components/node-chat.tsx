@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import { Send, Loader2, PenLine, Plus, Globe, Link2, ArrowUp, Eye, Lock, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { t, localized as loc } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n";
@@ -58,14 +58,14 @@ export function NodeChat({ slug, node, onUpdate }: { slug: string; node?: { stat
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); }
   };
 
-  const quickActions: { key: DictKey; prompt: Record<string, string> }[] = [
-    { key: "node_chat.q.rewrite", prompt: { es: "Reescribe el contenido completo", en: "Rewrite the full content" } },
-    { key: "node_chat.q.add_section", prompt: { es: "Agrega una sección sobre ", en: "Add a section about " } },
-    { key: "node_chat.q.translate", prompt: { es: "Mejora la traducción al inglés", en: "Improve the Spanish translation" } },
-    { key: "node_chat.q.connect", prompt: { es: "Conecta con nodos relacionados", en: "Connect to related nodes" } },
-    ...(node?.status === "seed" ? [{ key: "node_chat.q.promote" as DictKey, prompt: { es: "Promueve a growing", en: "Promote to growing" } }] : []),
-    ...(node?.visibility === "private" ? [{ key: "node_chat.q.publish" as DictKey, prompt: { es: "Hazlo público", en: "Make it public" } }] : [{ key: "node_chat.q.hide" as DictKey, prompt: { es: "Hazlo privado", en: "Make it private" } }]),
-    { key: "node_chat.q.delete", prompt: { es: "Elimina este nodo", en: "Delete this node" } },
+  const quickActions: { key: DictKey; icon: ReactNode; prompt: Record<string, string> }[] = [
+    { key: "node_chat.q.rewrite", icon: <PenLine className="h-3 w-3" />, prompt: { es: "Reescribe el contenido completo", en: "Rewrite the full content" } },
+    { key: "node_chat.q.add_section", icon: <Plus className="h-3 w-3" />, prompt: { es: "Agrega una sección sobre ", en: "Add a section about " } },
+    { key: "node_chat.q.translate", icon: <Globe className="h-3 w-3" />, prompt: { es: "Mejora la traducción al inglés", en: "Improve the Spanish translation" } },
+    { key: "node_chat.q.connect", icon: <Link2 className="h-3 w-3" />, prompt: { es: "Conecta con nodos relacionados", en: "Connect to related nodes" } },
+    ...(node?.status === "seed" ? [{ key: "node_chat.q.promote" as DictKey, icon: <ArrowUp className="h-3 w-3" /> as ReactNode, prompt: { es: "Promueve a growing", en: "Promote to growing" } }] : []),
+    ...(node?.visibility === "private" ? [{ key: "node_chat.q.publish" as DictKey, icon: <Eye className="h-3 w-3" /> as ReactNode, prompt: { es: "Hazlo público", en: "Make it public" } }] : [{ key: "node_chat.q.hide" as DictKey, icon: <Lock className="h-3 w-3" /> as ReactNode, prompt: { es: "Hazlo privado", en: "Make it private" } }]),
+    { key: "node_chat.q.delete", icon: <Trash2 className="h-3 w-3" />, prompt: { es: "Elimina este nodo", en: "Delete this node" } },
   ];
 
   function fillPrompt(action: typeof quickActions[number]) {
@@ -82,10 +82,11 @@ export function NodeChat({ slug, node, onUpdate }: { slug: string; node?: { stat
       </div>
 
       {messages.length === 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
           {quickActions.map((a) => (
             <button key={a.key} onClick={() => fillPrompt(a)} disabled={loading}
-              className="rounded-full border border-[var(--color-border)] px-2.5 py-1 text-xs text-[var(--color-muted)] transition-colors hover:border-[var(--color-fg)] hover:text-[var(--color-fg)] disabled:opacity-50 cursor-pointer">
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-2.5 py-1.5 text-xs text-[var(--color-muted)] transition-colors hover:border-[var(--color-fg)] hover:text-[var(--color-fg)] disabled:opacity-50 cursor-pointer">
+              {a.icon}
               {t(a.key, locale)}
             </button>
           ))}
