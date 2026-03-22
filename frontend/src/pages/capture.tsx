@@ -206,14 +206,14 @@ export default function Capture() {
 
       {/* Input — fixed at bottom */}
       <div className="shrink-0 border-t border-[var(--color-border)] pt-3">
-        <div className="flex items-end gap-2">
+        <div className="flex items-stretch gap-2">
           <textarea
             value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} rows={2}
             className="min-h-[2.5rem] flex-1 resize-none rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]"
             placeholder={t("capture.chat_placeholder", locale)}
           />
           <button onClick={send} disabled={!valid} aria-label={t("capture.submit", locale)}
-            className="mb-0.5 shrink-0 rounded-lg bg-[var(--color-fg)] p-2 text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-30 disabled:cursor-default cursor-pointer">
+            className="shrink-0 rounded-lg bg-[var(--color-fg)] px-3 text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-30 disabled:cursor-default cursor-pointer">
             <Send className="h-4 w-4" />
           </button>
         </div>
