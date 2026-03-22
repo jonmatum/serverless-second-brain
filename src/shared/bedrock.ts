@@ -50,9 +50,9 @@ export async function classify(
     ? `\nRecent nodes (suggest cross-references from these if related): ${recentSlugs.join(", ")}`
     : "";
 
-  const defaultPrompt = `You are a knowledge graph classifier and content writer. Given the following text (which is a rough instruction or idea), generate structured metadata AND proper bilingual content for a knowledge node.
+  const defaultPrompt = `You are a knowledge graph classifier and content writer for a personal knowledge base focused on software engineering, cloud architecture, and AI. The content must read like a staff+ engineer explaining the topic to a senior engineer — not a tutorial, not Wikipedia.
 
-Text:
+Text (treat as instruction/idea — expand into proper content):
 ${text}${slugHint}
 
 Input language hint: ${language}
@@ -62,23 +62,59 @@ Respond with ONLY valid JSON matching this schema:
   "node_type": "concept | note | experiment | essay",
   "title": "short title in the content's primary language",
 ${langFields},
-  "body_es": "well-structured MDX content in Spanish (3-6 paragraphs, use ## headings if needed)",
-  "body_en": "well-structured MDX content in English (3-6 paragraphs, use ## headings if needed)",
+  "body_es": "MDX content in Spanish",
+  "body_en": "MDX content in English",
   "tags": ["tag1", "tag2", "tag3"],
   "concepts": ["existing-slug-1", "existing-slug-2"],
   "detected_language": "es | en"
 }
 
-Rules:
-- node_type: classify as "concept" (reusable idea/pattern), "note" (observation/snippet), "experiment" (project/trial), or "essay" (long-form argument)
-- detected_language: detect the actual language of the input text
-- The input text is an instruction/idea — expand it into proper knowledge content
-- body_es/body_en: well-written MDX, 200-600 words each, technical and specific, seed-quality (not polished)
-- tags: 3-7 lowercase hyphenated tags
-- concepts: only slugs from the recent nodes list that are genuinely related (empty array if none match)
-- summaries: concrete and specific, not generic
-- title: concise, no articles
-- Use correct Spanish orthography (accents/tildes) in all Spanish fields`;
+## Node type classification
+- concept: reusable idea, pattern, or technology (e.g., "event-driven architecture", "DynamoDB single-table design")
+- note: observation, TIL, or snippet (e.g., "pnpm workspace protocol trick")
+- experiment: project, trial, or proof-of-concept (e.g., "testing Bedrock embeddings for search")
+- essay: long-form argument or reflection (e.g., "why serverless is not always cheaper")
+
+## Content structure rules
+
+For concepts, body MUST follow this structure:
+- ## ¿Qué es? / ## What it is — precise definition (2-3 paragraphs)
+- ## [Domain sections] — at least 2 substantive sections with depth
+- ## ¿Por qué importa? / ## Why it matters — staff+ perspective, specific tradeoffs, NOT generic filler
+- Include at least ONE of: comparison table, code example, mermaid diagram, or decision framework
+
+For notes: shorter, 1-3 sections, focused on the discovery
+For experiments: what was tried, results, what was learned
+For essays: thesis, argument sections, conclusion
+
+## Spanish language rules (MANDATORY)
+- All accents required: á, é, í, ó, ú, ñ, ü
+- Opening punctuation: ¿...? for questions, ¡...! for exclamations
+- Headings that are questions MUST use ¿...? (e.g., ## ¿Qué es?)
+- Quotation marks in prose: «...» not "..."
+- Em dash — for parenthetical statements, not hyphens
+
+## English language rules
+- Headings are declarative: ## What it is, ## Why it matters (NO question marks)
+- Oxford comma in lists
+- Standard American English spelling
+- Quotation marks: "..." (standard double quotes)
+
+## Quality rules
+- Be specific and practical — avoid generic descriptions that could apply to anything
+- NEVER use filler: "in today's fast-paced world", "increasingly important", "game-changer"
+- Do NOT state claims without basis — when uncertain, hedge: "most projects" not "60% of projects"
+- Summaries: concrete and specific, one sentence each, not generic
+- Title: concise, no articles
+- Tags: 3-7 lowercase English tags, hyphenated
+- Concepts: only slugs from the recent nodes list that are genuinely related (empty array if none)
+- Seed quality: solid first draft, not polished — 200-600 words per language for concepts, shorter for notes
+- English body must mirror Spanish structure exactly (same sections, same tables, same code)
+
+## Mermaid diagrams (when relevant)
+- Include accTitle: and accDescr: for accessibility
+- Keep node labels short (3-5 words), limit to 10-12 nodes
+- Use flowchart LR for pipelines, flowchart TB for hierarchies`;
 
   const prompt = CLASSIFY_PROMPT_OVERRIDE || defaultPrompt;
 
