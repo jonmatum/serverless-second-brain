@@ -7,15 +7,26 @@ import type { MetaItem, EdgeItem } from "../../shared/types.js";
 
 // In-memory cache for warm invocations
 let cachedGraph: { nodes: MetaItem[]; edges: EdgeItem[] } | null = null;
-let cacheTime = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+let cacheVersion = "";
 const CORS_ORIGIN = process.env.CORS_ALLOW_ORIGIN ?? "*";
 
+async function getCacheVersion(): Promise<string> {
+  const { DynamoDBClient, GetItemCommand } = await import("@aws-sdk/client-dynamodb");
+  const client = new DynamoDBClient({});
+  const res = await client.send(new GetItemCommand({
+    TableName: process.env.TABLE_NAME!,
+    Key: { PK: { S: "SYSTEM#config" }, SK: { S: "CACHE_VERSION" } },
+    ProjectionExpression: "version",
+  }));
+  return res.Item?.version?.S ?? "";
+}
+
 async function loadGraph() {
-  if (!cachedGraph || Date.now() - cacheTime > CACHE_TTL_MS) {
+  const currentVersion = await getCacheVersion();
+  if (!cachedGraph || currentVersion !== cacheVersion) {
     const [nodes, edges] = await Promise.all([getAllNodes(), getAllEdges()]);
     cachedGraph = { nodes, edges };
-    cacheTime = Date.now();
+    cacheVersion = currentVersion;
   }
   return cachedGraph;
 }

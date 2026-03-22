@@ -148,3 +148,10 @@ export async function batchGetNodes(slugs: string[]): Promise<MetaItem[]> {
   }
   return items;
 }
+
+export async function bumpCacheVersion(): Promise<void> {
+  await ddb.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Item: { PK: "SYSTEM#config", SK: "CACHE_VERSION", version: Date.now().toString() },
+  }));
+}

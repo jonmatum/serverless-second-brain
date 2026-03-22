@@ -7,7 +7,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { validateCaptureRequest, generateSlug } from "../../shared/validation.js";
-import { getNode, putNode, putEdge, putAudit, listNodeSlugs } from "../../shared/dynamodb.js";
+import { getNode, putNode, putEdge, putAudit, listNodeSlugs, bumpCacheVersion } from "../../shared/dynamodb.js";
 import { putBody } from "../../shared/s3.js";
 import { classify } from "../../shared/bedrock.js";
 import { ValidationError, DuplicateError, BedrockError } from "../../shared/errors.js";
@@ -93,6 +93,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       ttl: Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60,
     };
     await putAudit(audit);
+    await bumpCacheVersion();
 
     const response: CaptureResponse = {
       id: slug,
