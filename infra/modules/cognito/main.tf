@@ -20,6 +20,12 @@ variable "logout_urls" {
   default     = ["http://localhost:3000"]
 }
 
+variable "allow_self_signup" {
+  description = "Allow users to register themselves (false = admin-only, true = multi-tenant)"
+  type        = bool
+  default     = false
+}
+
 # --- User Pool ---
 
 resource "aws_cognito_user_pool" "this" {
@@ -27,6 +33,10 @@ resource "aws_cognito_user_pool" "this" {
 
   auto_verified_attributes = ["email"]
   username_attributes       = ["email"]
+
+  admin_create_user_config {
+    allow_admin_create_user_only = !var.allow_self_signup
+  }
 
   password_policy {
     minimum_length    = 12

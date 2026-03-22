@@ -135,6 +135,14 @@ const dict = {
   "auth.email": { es: "Correo electr\u00f3nico", en: "Email" },
   "auth.password": { es: "Contrase\u00f1a", en: "Password" },
   "auth.logging_in": { es: "Ingresando\u2026", en: "Logging in\u2026" },
+  "auth.signup": { es: "Crear cuenta", en: "Sign up" },
+  "auth.signing_up": { es: "Creando cuenta\u2026", en: "Signing up\u2026" },
+  "auth.confirm": { es: "Confirmar cuenta", en: "Confirm account" },
+  "auth.confirming": { es: "Confirmando\u2026", en: "Confirming\u2026" },
+  "auth.code": { es: "C\u00f3digo de verificaci\u00f3n", en: "Verification code" },
+  "auth.check_email": { es: "Revisa tu correo para el c\u00f3digo de verificaci\u00f3n.", en: "Check your email for the verification code." },
+  "auth.no_account": { es: "\u00bfNo tienes cuenta?", en: "Don\u0027t have an account?" },
+  "auth.has_account": { es: "\u00bfYa tienes cuenta?", en: "Already have an account?" },
 
   // Capture
   "capture.title": { es: "Capturar", en: "Capture" },

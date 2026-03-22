@@ -395,11 +395,12 @@ module "monitoring" {
 # --- Authentication (#17) ---
 
 module "cognito" {
-  source        = "../../modules/cognito"
-  project_name  = var.project_name
-  environment   = var.environment
-  callback_urls = var.cognito_callback_urls
-  logout_urls   = var.cognito_logout_urls
+  source           = "../../modules/cognito"
+  project_name     = var.project_name
+  environment      = var.environment
+  callback_urls    = var.cognito_callback_urls
+  logout_urls      = var.cognito_logout_urls
+  allow_self_signup = var.allow_self_signup
 }
 
 module "authorizer_lambda" {

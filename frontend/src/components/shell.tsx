@@ -74,45 +74,86 @@ function LocaleToggle() {
 }
 
 function LoginModal() {
-  const { showLogin, setShowLogin, login } = useAuth();
+  const { showLogin, setShowLogin, login, signUp, confirmSignUp } = useAuth();
   const { locale } = usePrefs();
+  const [mode, setMode] = useState<"login" | "signup" | "confirm">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!showLogin) return null;
 
+  function reset() { setEmail(""); setPassword(""); setCode(""); setError(""); setMode("login"); }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true); setError("");
-    const err = await login(email, password);
+    let err: string | null;
+    if (mode === "signup") {
+      err = await signUp(email, password);
+      if (!err) { setMode("confirm"); setLoading(false); return; }
+    } else if (mode === "confirm") {
+      err = await confirmSignUp(email, code);
+      if (!err) {
+        // Auto-login after confirmation
+        err = await login(email, password);
+        if (!err) { reset(); setShowLogin(false); setLoading(false); return; }
+      }
+    } else {
+      err = await login(email, password);
+      if (!err) { reset(); setLoading(false); return; }
+    }
     setLoading(false);
     if (err) setError(err);
-    else { setEmail(""); setPassword(""); }
   }
 
+  const title = mode === "confirm" ? t("auth.confirm", locale) : mode === "signup" ? t("auth.signup", locale) : t("auth.login", locale);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLogin(false)}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowLogin(false); reset(); }}>
       <div className="mx-4 w-full max-w-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{t("auth.login", locale)}</h2>
-          <button onClick={() => setShowLogin(false)} className="text-[var(--color-muted)] hover:text-[var(--color-fg)]">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button onClick={() => { setShowLogin(false); reset(); }} className="text-[var(--color-muted)] hover:text-[var(--color-fg)]">
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email", locale)} required autoFocus disabled={loading}
-            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.password", locale)} required disabled={loading}
-            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+          {mode !== "confirm" ? (
+            <>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email", locale)} required autoFocus disabled={loading}
+                className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.password", locale)} required disabled={loading}
+                className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-[var(--color-muted)]">{t("auth.check_email", locale)}</p>
+              <input type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("auth.code", locale)} required autoFocus disabled={loading} inputMode="numeric" autoComplete="one-time-code"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+            </>
+          )}
           {error && <p className="text-xs text-red-500">{error}</p>}
           <button type="submit" disabled={loading}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-fg)] py-2 text-sm font-medium text-[var(--color-bg)] cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? t("auth.logging_in", locale) : t("auth.login", locale)}
+            {loading ? (mode === "signup" ? t("auth.signing_up", locale) : mode === "confirm" ? t("auth.confirming", locale) : t("auth.logging_in", locale)) : title}
           </button>
         </form>
+        {mode === "login" && (
+          <p className="text-center text-xs text-[var(--color-muted)]">
+            {t("auth.no_account", locale)}{" "}
+            <button type="button" onClick={() => { setError(""); setMode("signup"); }} className="text-[var(--color-accent)] hover:underline">{t("auth.signup", locale)}</button>
+          </p>
+        )}
+        {mode === "signup" && (
+          <p className="text-center text-xs text-[var(--color-muted)]">
+            {t("auth.has_account", locale)}{" "}
+            <button type="button" onClick={() => { setError(""); setMode("login"); }} className="text-[var(--color-accent)] hover:underline">{t("auth.login", locale)}</button>
+          </p>
+        )}
       </div>
     </div>
   );

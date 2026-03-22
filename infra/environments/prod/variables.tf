@@ -115,3 +115,9 @@ variable "cognito_logout_urls" {
   type        = list(string)
   default     = ["http://localhost:3000"]
 }
+
+variable "allow_self_signup" {
+  description = "Allow users to self-register (false = personal, true = multi-tenant)"
+  type        = bool
+  default     = false
+}

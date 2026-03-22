@@ -5,6 +5,8 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<string | null>;
+  signUp: (email: string, password: string) => Promise<string | null>;
+  confirmSignUp: (email: string, code: string) => Promise<string | null>;
   logout: () => void;
   showLogin: boolean;
   setShowLogin: (v: boolean) => void;
@@ -33,8 +35,8 @@ function userPoolId(): string {
 
 const Ctx = createContext<AuthState>({
   user: null, token: null, loading: true,
-  login: async () => null, logout: () => {},
-  showLogin: false, setShowLogin: () => {},
+  login: async () => null, signUp: async () => null, confirmSignUp: async () => null,
+  logout: () => {}, showLogin: false, setShowLogin: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -166,7 +168,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applyToken]);
 
-  return <Ctx.Provider value={{ user, token, loading, login, logout: clearSession, showLogin, setShowLogin }}>{children}</Ctx.Provider>;
+  const signUp = useCallback(async (email: string, password: string): Promise<string | null> => {
+    if (!CLIENT_ID) return "Auth not configured";
+    try {
+      const res = await fetch(COGNITO_IDP, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-amz-json-1.1", "X-Amz-Target": "AWSCognitoIdentityProviderService.SignUp" },
+        body: JSON.stringify({ ClientId: CLIENT_ID, Username: email, Password: password, UserAttributes: [{ Name: "email", Value: email }] }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.message ?? data.__type ?? "Sign up failed";
+      return null;
+    } catch (err) { return err instanceof Error ? err.message : "Network error"; }
+  }, []);
+
+  const confirmSignUp = useCallback(async (email: string, code: string): Promise<string | null> => {
+    if (!CLIENT_ID) return "Auth not configured";
+    try {
+      const res = await fetch(COGNITO_IDP, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-amz-json-1.1", "X-Amz-Target": "AWSCognitoIdentityProviderService.ConfirmSignUp" },
+        body: JSON.stringify({ ClientId: CLIENT_ID, Username: email, ConfirmationCode: code }),
+      });
+      const data = await res.json();
+      if (!res.ok) return data.message ?? data.__type ?? "Confirmation failed";
+      return null;
+    } catch (err) { return err instanceof Error ? err.message : "Network error"; }
+  }, []);
+
+  return <Ctx.Provider value={{ user, token, loading, login, signUp, confirmSignUp, logout: clearSession, showLogin, setShowLogin }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() { return useContext(Ctx); }
