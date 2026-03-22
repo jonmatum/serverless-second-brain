@@ -10,4 +10,13 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://3wzbyt9i47.execute-api.us-east-1.amazonaws.com/dev",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
+    },
+  },
 });
