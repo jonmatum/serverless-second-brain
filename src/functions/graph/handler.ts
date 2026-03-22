@@ -33,6 +33,10 @@ function formatNode(n: MetaItem) {
   return {
     id: n.slug,
     title: n.title,
+    title_es: n.title_es,
+    title_en: n.title_en,
+    summary_es: n.summary_es,
+    summary_en: n.summary_en,
     node_type: n.node_type,
     status: n.status,
     tags: n.tags,

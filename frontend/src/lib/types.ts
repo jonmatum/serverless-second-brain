@@ -1,6 +1,10 @@
 export interface GraphNode {
   id: string;
   title: string;
+  title_es?: string;
+  title_en?: string;
+  summary_es?: string;
+  summary_en?: string;
   node_type: "concept" | "note" | "experiment" | "essay";
   status: "seed" | "growing" | "evergreen";
   tags: string[];

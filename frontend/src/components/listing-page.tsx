@@ -29,9 +29,18 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
     if (status) list = list.filter((n) => n.status === status);
     if (query.length >= 2) {
       const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-      list = list.filter((n) => terms.every((term) => n.title.toLowerCase().includes(term)));
+      list = list.filter((n) => {
+        const title = (locale === "es" ? n.title_es : n.title_en) || n.title;
+        const summary = (locale === "es" ? n.summary_es : n.summary_en) || "";
+        const haystack = `${title} ${summary} ${(n.tags ?? []).join(" ")}`.toLowerCase();
+        return terms.every((term) => haystack.includes(term));
+      });
     }
-    return list.sort((a, b) => a.title.localeCompare(b.title, locale));
+    return list.sort((a, b) => {
+      const ta = (locale === "es" ? a.title_es : a.title_en) || a.title;
+      const tb = (locale === "es" ? b.title_es : b.title_en) || b.title;
+      return ta.localeCompare(tb, locale);
+    });
   }, [nodes, status, query, locale]);
 
   return (
@@ -79,11 +88,15 @@ export function ListingPage({ nodeType }: { nodeType: string }) {
         <p className="py-12 text-center text-[var(--color-muted)]">{t("listing.empty", locale)}</p>
       ) : (
         <ul className="space-y-2">
-          {filtered.map((n) => (
-            <li key={n.id}>
-              <NodeCard id={n.id} title={n.title} node_type={n.node_type} status={n.status} tags={n.tags} />
-            </li>
-          ))}
+          {filtered.map((n) => {
+            const title = (locale === "es" ? n.title_es : n.title_en) || n.title;
+            const summary = (locale === "es" ? n.summary_es : n.summary_en) || undefined;
+            return (
+              <li key={n.id}>
+                <NodeCard id={n.id} title={title} summary={summary} node_type={n.node_type} status={n.status} tags={n.tags} />
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
