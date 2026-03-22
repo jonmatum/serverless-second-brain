@@ -36,10 +36,12 @@ export default function Home() {
   return (
     <div className="space-y-16">
       {/* Hero */}
-      <section className="flex flex-col items-center gap-6 pt-8 text-center">
+      <section className="relative flex flex-col items-center gap-6 pt-8 text-center">
+        <div className="pointer-events-none absolute -top-20 h-64 w-64 rounded-full bg-[var(--color-accent)] opacity-[0.07] blur-3xl" />
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{t("home.title", locale)}</h1>
           <p className="mt-2 text-[var(--color-muted)]">{t("home.subtitle", locale)}</p>
+          <p className="mt-1 font-mono text-xs italic text-[var(--color-muted)]">{t("home.tagline", locale)}</p>
         </div>
       </section>
 

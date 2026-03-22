@@ -156,6 +156,17 @@
   html {
     @apply font-sans;
   }
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* Justified text on main content — matching jonmatum.com */
+main {
+  text-align: justify;
 }
 
 /* Minimal scrollbar matching jonmatum.com */

@@ -3,7 +3,8 @@ import { api } from "@/lib/api";
 import type { GraphResponse } from "@/lib/types";
 import { ForceGraph } from "@/components/force-graph";
 import { Filters } from "@/components/filters";
-import { t } from "@/lib/i18n";
+import { TYPE_COLORS } from "@/lib/constants";
+import { t, typeLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 
 export default function Graph() {
@@ -17,15 +18,25 @@ export default function Graph() {
   }, [type, status]);
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{t("graph.title", locale)}</h1>
-          {data && <p className="text-sm text-muted-foreground">{t("graph.nodes_edges", locale, { nodes: data.meta.node_count, edges: data.meta.edge_count })}</p>}
-        </div>
-        <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">{t("graph.title", locale)}</h1>
+        {data && <p className="mt-1 text-sm text-[var(--color-muted)]">{data.meta.node_count} {t("graph.nodes", locale)}, {data.meta.edge_count} {t("graph.edges", locale)}</p>}
       </div>
-      {data ? <ForceGraph nodes={data.nodes} edges={data.edges} /> : <p className="text-muted-foreground">{t("graph.loading", locale)}</p>}
+
+      {/* Type color legend — matching jonmatum.com */}
+      <div className="flex gap-4 text-xs text-[var(--color-muted)]">
+        {Object.entries(TYPE_COLORS).map(([tp, color]) => (
+          <span key={tp} className="flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+            {typeLabel(tp, locale)}
+          </span>
+        ))}
+      </div>
+
+      <Filters type={type} status={status} onTypeChange={setType} onStatusChange={setStatus} />
+
+      {data ? <ForceGraph nodes={data.nodes} edges={data.edges} /> : <p className="text-[var(--color-muted)]">{t("graph.loading", locale)}</p>}
     </div>
   );
 }

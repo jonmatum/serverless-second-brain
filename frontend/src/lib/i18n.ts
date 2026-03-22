@@ -14,6 +14,7 @@ const dict = {
   // Home
   "home.title": { es: "Second Brain", en: "Second Brain" },
   "home.subtitle": { es: "Grafo de conocimiento personal \u2014 serverless, biling\u00fce, con b\u00fasqueda sem\u00e1ntica y puerta para agentes de IA.", en: "Personal knowledge graph \u2014 serverless, bilingual, with semantic search and AI agent gateway." },
+  "home.tagline": { es: "captura \u2192 clasifica \u2192 conecta \u2192 descubre", en: "capture \u2192 classify \u2192 connect \u2192 discover" },
   "home.dashboard": { es: "Dashboard", en: "Dashboard" },
   "home.dashboard.desc": { es: "Estad\u00edsticas y salud del grafo", en: "Graph stats and health" },
   "home.graph": { es: "Grafo", en: "Graph" },
@@ -68,6 +69,8 @@ const dict = {
   // Graph
   "graph.title": { es: "Grafo de conocimiento", en: "Knowledge graph" },
   "graph.nodes_edges": { es: "{nodes} nodos \u00b7 {edges} aristas", en: "{nodes} nodes \u00b7 {edges} edges" },
+  "graph.nodes": { es: "nodos", en: "nodes" },
+  "graph.edges": { es: "aristas", en: "edges" },
   "graph.loading": { es: "Cargando grafo\u2026", en: "Loading graph\u2026" },
 
   // Node detail
@@ -90,6 +93,9 @@ const dict = {
   "dashboard.by_status": { es: "Por estado", en: "By status" },
   "dashboard.most_connected": { es: "M\u00e1s conectados", en: "Most connected" },
   "dashboard.edges_count": { es: "{count} aristas", en: "{count} edges" },
+  "dashboard.graph_health": { es: "Salud del grafo", en: "Graph health" },
+  "dashboard.avg_connections": { es: "Promedio", en: "Average" },
+  "dashboard.needs_attention": { es: "Necesitan atenci\u00f3n", en: "Needs attention" },
 
   // Listing
   "listing.filter": { es: "Filtrar...", en: "Filter..." },

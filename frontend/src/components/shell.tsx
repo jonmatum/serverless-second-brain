@@ -144,12 +144,9 @@ function ShellInner() {
 
               {/* Mobile */}
               <div className="flex items-center gap-3 md:hidden">
-                <AuthButton />
-                <LocaleToggle />
-                <ThemeToggle />
                 <button
                   onClick={() => setOpen(!open)}
-                  className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
+                  className="p-2 text-[var(--color-muted)]"
                   aria-label={open ? "Close menu" : "Open menu"}
                 >
                   {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -174,6 +171,10 @@ function ShellInner() {
                   {t(n.key, locale)}
                 </Link>
               ))}
+              <div className="flex items-center gap-4 border-t border-[var(--color-border)] pt-2">
+                <LocaleToggle />
+                <ThemeToggle />
+              </div>
             </div>
           )}
         </nav>
