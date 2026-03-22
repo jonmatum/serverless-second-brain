@@ -41,6 +41,7 @@ interface Message {
 export default function Capture() {
   const { user, token, setShowLogin } = useAuth();
   const { locale } = usePrefs();
+  const [nodeType, setNodeType] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,25 @@ export default function Capture() {
     );
   }
 
+  if (!nodeType) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
+          <p className="text-sm text-[var(--color-muted)]">{t("capture.type_question", locale)}</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {(["concept", "note", "experiment", "essay"] as const).map((tp) => (
+            <button key={tp} onClick={() => setNodeType(tp)}
+              className="rounded-lg border border-[var(--color-border)] px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors hover:border-[var(--color-fg)] hover:text-[var(--color-fg)]">
+              {t(`type.${tp}` as Parameters<typeof t>[0], locale)}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const valid = text.length >= 50;
 
   async function send() {
@@ -70,7 +90,7 @@ export default function Capture() {
     setText("");
     setMessages((m) => [...m, { id, text: input, loading: true }]);
     try {
-      const raw = await api.capture({ text: input, visibility: "private", language: locale }, token);
+      const raw = await api.capture({ text: input, type: nodeType, visibility: "private", language: locale }, token);
       const node = (typeof raw === "string" ? JSON.parse(raw) : raw) as CaptureResult;
       setMessages((m) => m.map((msg) =>
         msg.id === id ? { ...msg, loading: false, result: node, visibility: "private", visibilityPending: true } : msg
@@ -98,7 +118,13 @@ export default function Capture() {
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Header — fixed */}
       <div className="flex shrink-0 items-center justify-between pb-4">
-        <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
+          <button onClick={() => setNodeType(null)}
+            className="rounded-full border border-[var(--color-border)] px-2.5 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:border-[var(--color-muted)]">
+            {t(`type.${nodeType}` as Parameters<typeof t>[0], locale)} ✕
+          </button>
+        </div>
         <span className="truncate text-xs text-[var(--color-muted)]">{user.email}</span>
       </div>
 
