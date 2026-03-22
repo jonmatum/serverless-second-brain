@@ -89,7 +89,7 @@ function ShellInner() {
             <div className="flex items-center gap-2">
               <Link to="/" className="flex items-center gap-1.5 font-mono text-sm font-semibold" onClick={() => setOpen(false)}>
                 <Brain className="h-4 w-4 text-[var(--color-accent)]" />
-                ssb
+                SSB
               </Link>
             </div>
 
