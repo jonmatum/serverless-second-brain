@@ -123,6 +123,9 @@ const dict = {
   // Auth
   "auth.login": { es: "Iniciar sesi\u00f3n", en: "Log in" },
   "auth.logout": { es: "Cerrar sesi\u00f3n", en: "Log out" },
+  "auth.email": { es: "Correo electr\u00f3nico", en: "Email" },
+  "auth.password": { es: "Contrase\u00f1a", en: "Password" },
+  "auth.logging_in": { es: "Ingresando\u2026", en: "Logging in\u2026" },
 
   // Capture
   "capture.title": { es: "Capturar", en: "Capture" },

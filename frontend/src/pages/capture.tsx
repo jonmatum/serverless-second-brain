@@ -12,7 +12,7 @@ const TYPES = ["concept", "note", "experiment", "essay"];
 interface CaptureResult { slug: string; title: string; node_type: string; status: string; tags: string[]; }
 
 export default function Capture() {
-  const { user, token, login } = useAuth();
+  const { user, token, setShowLogin } = useAuth();
   const { locale } = usePrefs();
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
@@ -28,7 +28,7 @@ export default function Capture() {
         <h1 className="text-2xl font-semibold">{t("capture.title", locale)}</h1>
         <div className="rounded-lg border border-[var(--color-border)] p-8 text-center space-y-4">
           <p className="text-sm text-[var(--color-muted)]">{t("capture.login_required", locale)}</p>
-          <button onClick={login} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80">
+          <button onClick={() => setShowLogin(true)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-fg)] px-4 py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80">
             <LogIn className="h-4 w-4" />
             {t("auth.login", locale)}
           </button>
@@ -49,7 +49,7 @@ export default function Capture() {
       setResult(res); setText(""); setUrl("");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error";
-      if (msg.includes("401")) { login(); return; }
+      if (msg.includes("401")) { setShowLogin(true); return; }
       setError(msg);
     } finally { setLoading(false); }
   }

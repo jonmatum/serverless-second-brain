@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3, Brain } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
@@ -29,7 +29,7 @@ const allMobileLinks: { href: string; key: DictKey }[] = [
 ];
 
 function AuthButton() {
-  const { user, loading, login, logout } = useAuth();
+  const { user, loading, logout, setShowLogin } = useAuth();
   const { locale } = usePrefs();
   if (loading) return null;
   if (user) {
@@ -41,7 +41,7 @@ function AuthButton() {
     );
   }
   return (
-    <button onClick={login} className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">
+    <button onClick={() => setShowLogin(true)} className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">
       <LogIn className="h-4 w-4" />
       <span className="sr-only">{t("auth.login", locale)}</span>
     </button>
@@ -70,6 +70,50 @@ function LocaleToggle() {
     >
       {locale === "es" ? "EN" : "ES"}
     </button>
+  );
+}
+
+function LoginModal() {
+  const { showLogin, setShowLogin, login } = useAuth();
+  const { locale } = usePrefs();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (!showLogin) return null;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setLoading(true); setError("");
+    const err = await login(email, password);
+    setLoading(false);
+    if (err) setError(err);
+    else { setEmail(""); setPassword(""); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLogin(false)}>
+      <div className="mx-4 w-full max-w-sm rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{t("auth.login", locale)}</h2>
+          <button onClick={() => setShowLogin(false)} className="text-[var(--color-muted)] hover:text-[var(--color-fg)]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email", locale)} required autoFocus
+            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.password", locale)} required
+            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]" />
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <button type="submit" disabled={loading}
+            className="w-full rounded-lg bg-[var(--color-fg)] py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-50">
+            {loading ? t("auth.logging_in", locale) : t("auth.login", locale)}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -189,6 +233,7 @@ function ShellInner() {
           </p>
         </div>
       </footer>
+      <LoginModal />
     </div>
   );
 }
