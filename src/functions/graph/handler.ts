@@ -99,7 +99,7 @@ async function handleNode(slug: string, authed: boolean, event: APIGatewayProxyE
     ...inbound.map((e) => e.PK.replace("NODE#", "")),
   ];
   const relatedMeta = await batchGetNodes(relatedSlugs);
-  const relatedNodes = relatedMeta.map((rn) => ({ id: rn.slug, title: rn.title, node_type: rn.node_type, status: rn.status }));
+  const relatedNodes = relatedMeta.map((rn) => ({ id: rn.slug, title: rn.title, title_es: rn.title_es, title_en: rn.title_en, summary_es: rn.summary_es, summary_en: rn.summary_en, node_type: rn.node_type, status: rn.status }));
 
   // Optionally fetch body from S3
   let body: string | null = null;

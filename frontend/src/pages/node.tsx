@@ -6,7 +6,6 @@ import type { NodeResponse } from "@/lib/types";
 import { ContentMeta } from "@/components/badges";
 import { MarkdownBody } from "@/components/markdown-body";
 import { NodeDetailSkeleton } from "@/components/skeletons";
-import { TYPE_COLORS } from "@/lib/constants";
 import { t, localized, typeLabel } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 
@@ -72,23 +71,25 @@ export default function NodePage() {
         </div>
       )}
 
-      {/* Related — matching jonmatum.com related-content.tsx */}
+      {/* Related — matching jonmatum.com */}
       {related.length > 0 && (
         <section className="space-y-3 border-t border-[var(--color-border)] pt-8">
           <h2 className="text-sm font-medium text-[var(--color-muted)]">
-            {t("node.related", locale, { count: edges.length })}
+            {t("node.related", locale, { count: related.length })}
           </h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {related.map((r) => (
-              <li key={r.id}>
-                <Link to={`/node?id=${r.id}`} className="block rounded-lg border border-[var(--color-border)] p-3 transition-colors hover:border-[var(--color-muted)]">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: TYPE_COLORS[r.node_type] }} />
-                    <span className="text-sm font-medium">{r.title}</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {related.map((r) => {
+              const rTitle = (locale === "es" ? r.title_es : r.title_en) || r.title;
+              const rSummary = locale === "es" ? r.summary_es : r.summary_en;
+              return (
+                <li key={r.id}>
+                  <Link to={`/node?id=${r.id}`} className="block rounded-lg border border-[var(--color-border)] p-3 transition-colors hover:border-[var(--color-muted)]">
+                    <span className="text-sm font-medium">{rTitle}</span>
+                    {rSummary && <p className="mt-1 text-xs text-[var(--color-muted)] line-clamp-2">{rSummary}</p>}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

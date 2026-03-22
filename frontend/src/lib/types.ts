@@ -71,6 +71,10 @@ export interface NodeEdge {
 export interface RelatedNode {
   id: string;
   title: string;
+  title_es?: string;
+  title_en?: string;
+  summary_es?: string;
+  summary_en?: string;
   node_type: string;
   status: string;
 }
