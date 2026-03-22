@@ -97,7 +97,7 @@ export default function Capture() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="capture-url" className="text-sm font-medium">{t("capture.url_label", locale)}</label>
+            <label htmlFor="capture-url" className="text-sm font-medium">{t("capture.url_label", locale)} <span className="font-normal text-[var(--color-muted)]">({t("capture.optional", locale)})</span></label>
             <input id="capture-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." disabled={loading}
               className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
           </div>
