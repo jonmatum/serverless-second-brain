@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3, Brain, Loader2 } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3, Brain, Loader2, Tag } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { t, type DictKey } from "@/lib/i18n";
@@ -15,6 +15,7 @@ const contentLinks: { href: string; key: DictKey }[] = [
 
 const toolLinks: { href: string; key: DictKey; icon: React.ReactNode }[] = [
   { href: "/graph", key: "nav.graph", icon: <Network className="h-4 w-4" /> },
+  { href: "/tags", key: "nav.tags", icon: <Tag className="h-4 w-4" /> },
   { href: "/timeline", key: "nav.timeline", icon: <Clock className="h-4 w-4" /> },
   { href: "/dashboard", key: "nav.dashboard", icon: <BarChart3 className="h-4 w-4" /> },
 ];
@@ -22,6 +23,7 @@ const toolLinks: { href: string; key: DictKey; icon: React.ReactNode }[] = [
 const allMobileLinks: { href: string; key: DictKey }[] = [
   ...contentLinks,
   { href: "/graph", key: "nav.graph" },
+  { href: "/tags", key: "nav.tags" },
   { href: "/search", key: "nav.search" },
   { href: "/timeline", key: "nav.timeline" },
   { href: "/dashboard", key: "nav.dashboard" },

@@ -9,6 +9,7 @@ const dict = {
   "nav.essays": { es: "Ensayos", en: "Essays" },
   "nav.timeline": { es: "Cronolog\u00eda", en: "Timeline" },
   "nav.capture": { es: "Capturar", en: "Capture" },
+  "nav.tags": { es: "Tags", en: "Tags" },
   "nav.tools": { es: "Herramientas", en: "Tools" },
 
   // Home
@@ -152,6 +153,12 @@ const dict = {
   "auth.no_account": { es: "\u00bfNo tienes cuenta?", en: "Don\u0027t have an account?" },
   "auth.has_account": { es: "\u00bfYa tienes cuenta?", en: "Already have an account?" },
 
+  // Tags
+  "tags.title": { es: "Tags", en: "Tags" },
+  "tags.desc": { es: "Todos los tags del grafo de conocimiento.", en: "All tags in the knowledge graph." },
+  "tags.all": { es: "Todos los tags", en: "All tags" },
+  "tags.count": { es: "{count} nodos", en: "{count} nodes" },
+
   // Capture
   "capture.title": { es: "Capturar", en: "Capture" },
   "capture.login_required": { es: "Inicia sesi\u00f3n para capturar conocimiento.", en: "Log in to capture knowledge." },
@@ -172,6 +179,7 @@ const dict = {
   "capture.type_question": { es: "¿Qué tipo de contenido vas a capturar?", en: "What type of content are you capturing?" },
   "capture.view_node": { es: "Ver nodo creado", en: "View created node" },
   "nav.capture": { es: "Capturar", en: "Capture" },
+  "nav.tags": { es: "Tags", en: "Tags" },
 } as const;
 
 export type Locale = "es" | "en";

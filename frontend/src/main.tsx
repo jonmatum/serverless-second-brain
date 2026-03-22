@@ -13,6 +13,7 @@ import Notes from "@/pages/notes";
 import Experiments from "@/pages/experiments";
 import Essays from "@/pages/essays";
 import Timeline from "@/pages/timeline";
+import Tags from "@/pages/tags";
 import Capture from "@/pages/capture";
 import Callback from "@/pages/callback";
 import NotFound from "@/pages/not-found";
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="experiments" element={<Experiments />} />
           <Route path="essays" element={<Essays />} />
           <Route path="timeline" element={<Timeline />} />
+          <Route path="tags" element={<Tags />} />
           <Route path="capture" element={<Capture />} />
           <Route path="*" element={<NotFound />} />
         </Route>

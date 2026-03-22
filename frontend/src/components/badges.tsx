@@ -41,7 +41,7 @@ export function TagList({ tags }: { tags?: string[] }) {
   return (
     <>
       {tags.map((tag) => (
-        <Link key={tag} to={`/search?q=${encodeURIComponent(tag)}`} className="text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">
+        <Link key={tag} to={`/tags?tag=${encodeURIComponent(tag)}`} className="text-xs text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">
           #{tag}
         </Link>
       ))}
