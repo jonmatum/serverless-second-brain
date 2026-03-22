@@ -83,7 +83,7 @@ export default function Capture() {
     );
   }
 
-  const valid = text.length >= 50;
+  const valid = text.length >= 10;
 
   async function send() {
     if (!valid || !token) return;

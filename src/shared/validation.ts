@@ -12,8 +12,8 @@ export function validateCaptureRequest(body: unknown): CaptureRequest {
 
   const req = body as Record<string, unknown>;
 
-  if (typeof req.text !== "string" || req.text.length < 50) {
-    throw new ValidationError("text is required and must be at least 50 characters");
+  if (typeof req.text !== "string" || req.text.length < 10) {
+    throw new ValidationError("text is required and must be at least 10 characters");
   }
 
   if (req.url !== undefined && typeof req.url !== "string") {

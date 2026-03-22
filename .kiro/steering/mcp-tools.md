@@ -95,7 +95,7 @@ Create a new knowledge node. The node starts as `seed` status — human review r
   "inputSchema": {
     "type": "object",
     "properties": {
-      "text": { "type": "string", "minLength": 50, "description": "Content text to create a node from" },
+      "text": { "type": "string", "minLength": 10, "description": "Content text to create a node from" },
       "url": { "type": "string", "format": "uri", "description": "Optional source URL" },
       "type": { "type": "string", "default": "concept", "description": "Node type" },
       "language": { "type": "string", "enum": ["es", "en"], "default": "es" }

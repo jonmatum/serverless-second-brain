@@ -27,7 +27,7 @@ Creates a new knowledge node. Bedrock classifies the input, generates bilingual 
 **Request**:
 ```json
 {
-  "text": "string (required, min 50 chars)",
+  "text": "string (required, min 10 chars)",
   "url": "string (optional, valid URL)",
   "type": "string (optional, default: 'concept')",
   "language": "string (optional, 'es' | 'en', default: 'es')"
@@ -53,7 +53,7 @@ Creates a new knowledge node. Bedrock classifies the input, generates bilingual 
 }
 ```
 
-**Error 400**: `{ "error": "validation_error", "message": "text is required and must be at least 50 characters" }`
+**Error 400**: `{ "error": "validation_error", "message": "text is required and must be at least 10 characters" }`
 **Error 409**: `{ "error": "duplicate_slug", "message": "Node with slug 'serverless' already exists" }`
 **Error 429**: `{ "error": "rate_limited", "message": "Too many requests" }`
 **Error 503**: `{ "error": "bedrock_unavailable", "message": "AI classification service temporarily unavailable" }`
