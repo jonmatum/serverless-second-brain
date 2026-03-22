@@ -1,6 +1,8 @@
 # Serverless Second Brain
 
-Production-ready serverless backend for a personal knowledge graph on AWS. DynamoDB, Lambda, Bedrock, MCP, Step Functions, EventBridge, SNS, API Gateway, CloudFront, and AgentCore.
+> ⚠️ **Work in progress** — Phases 1–2 deployed and functional, Phases 3–4 not yet started.
+
+Serverless backend for a personal knowledge graph on AWS. DynamoDB, Lambda, Bedrock, API Gateway, CloudFront, and Cognito.
 
 From the essay: [From Prototype to Production: A Serverless Second Brain on AWS](https://jonmatum.com/essays/from-prototype-to-production-serverless-second-brain)
 
@@ -27,7 +29,6 @@ flowchart TB
     ACR[AgentCore Runtime]
     EB[EventBridge Scheduler]
     LSurface[Lambda Surfacing]
-    SF[Step Functions]
   end
 
   subgraph Memory
@@ -54,9 +55,6 @@ flowchart TB
 
   ACR -- "reasons" --> BR
   EB -- "daily cron" --> LSurface
-
-  SF -- "orchestrates" --> LCapture
-  SF -- "orchestrates" --> LSurface
 
   LCapture -- "writes" --> DDB
   LCapture -- "stores MDX" --> S3C
@@ -89,7 +87,7 @@ Scales to zero. No minimum costs beyond S3 storage.
 | Moderate (100 req/day) | ~$2.44 |
 | High (1,000 req/day) | ~$11.21 |
 
-Real cost data from production: [`docs/benchmarks/results.md`](docs/benchmarks/results.md)
+Real cost data: [`docs/benchmarks/results.md`](docs/benchmarks/results.md)
 
 ## API
 
@@ -120,13 +118,12 @@ Full MCP spec: [`.kiro/steering/mcp-tools.md`](.kiro/steering/mcp-tools.md)
 
 Each phase is independently deployable.
 
-| Phase | Components | Issues |
+| Phase | Components | Status |
 |---|---|---|
-| 1 — Capture | Terraform foundation, DynamoDB, S3, Capture Lambda, API Gateway, Step Functions, data migration | #1 → #2 → #3 → #4 → #5 → #11 |
-| 2 — Read | Search Lambda, Graph Lambda, CloudFront + S3 frontend | #6, #7, #10 |
-| 3 — Agent | AgentCore Gateway + Runtime, MCP tools, write safety research | #8, #15 |
-| 4 — Proactive | EventBridge scheduler, Surfacing Lambda, SNS notifications | #9 |
-| Cross-cutting | Benchmarks, domain-agnostic config, observability | #12, #13, #14 |
+| 1 — Capture | Terraform foundation, DynamoDB, S3, Capture Lambda, API Gateway, Cognito auth | ✅ Deployed |
+| 2 — Read | Search Lambda, Graph Lambda, CloudFront + S3 frontend | ✅ Deployed |
+| 3 — Agent | AgentCore Gateway + Runtime, MCP tools, reasoning agent | 🔲 Not started |
+| 4 — Proactive | EventBridge scheduler, Surfacing Lambda, SNS notifications | 🔲 Not started |
 
 ## Architecture Decision Records
 
@@ -136,16 +133,18 @@ Every significant technical decision is documented in [`docs/decisions/`](docs/d
 |---|---|---|
 | [001](docs/decisions/001-lambda-packaging-and-framework.md) | Lambda packaging (zip) with no web framework | Accepted |
 | [002](docs/decisions/002-mcp-write-safety.md) | Write safety — 6 controls for MCP agent mutations | Accepted |
-| [003](docs/decisions/003-authentication-and-visibility.md) | Cognito authentication and visibility model | Proposed |
+| [003](docs/decisions/003-authentication-and-visibility.md) | Cognito authentication and visibility model | Accepted |
 | [004](docs/decisions/004-dynamodb-single-table-design.md) | DynamoDB single-table design with 2 GSIs | Accepted |
 | [005](docs/decisions/005-hybrid-search-strategy.md) | Hybrid keyword + semantic search | Accepted |
-| [006](docs/decisions/006-step-functions-express-capture-pipeline.md) | Step Functions Express for capture pipeline | Accepted |
+| [006](docs/decisions/006-step-functions-express-capture-pipeline.md) | Step Functions Express for capture pipeline | Superseded |
 | [007](docs/decisions/007-agentcore-gateway-over-self-hosted-mcp.md) | AgentCore Gateway over self-hosted MCP server | Accepted |
 | [008](docs/decisions/008-in-memory-embedding-scan.md) | In-memory embedding scan (temporary) | Accepted |
 | [009](docs/decisions/009-spec-driven-development.md) | Spec-Driven Development approach | Accepted |
 | [010](docs/decisions/010-bedrock-token-optimization.md) | Bedrock token optimization — recent slugs | Accepted |
 | [011](docs/decisions/011-cloudfront-s3-static-hosting.md) | CloudFront + S3 over Vercel/Amplify | Accepted |
 | [012](docs/decisions/012-github-actions-oidc.md) | GitHub Actions OIDC over static credentials | Accepted |
+
+> ADR-006 superseded: capture now uses a monolithic Lambda handler via API Gateway Lambda proxy integration instead of Step Functions Express sync. SFN step handlers are retained for future async/batch use.
 
 ## Prerequisites
 
