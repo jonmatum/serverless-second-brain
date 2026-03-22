@@ -147,6 +147,7 @@ const dict = {
   "capture.submit": { es: "Capturar", en: "Capture" },
   "capture.submitting": { es: "Procesando\u2026", en: "Processing\u2026" },
   "capture.success": { es: "Nodo creado exitosamente", en: "Node created successfully" },
+  "capture.visibility_question": { es: "¿Quieres que sea público o privado?", en: "Should this be public or private?" },
   "capture.view_node": { es: "Ver nodo creado", en: "View created node" },
   "nav.capture": { es: "Capturar", en: "Capture" },
 } as const;

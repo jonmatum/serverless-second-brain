@@ -56,4 +56,11 @@ export const api = {
       body: JSON.stringify(body),
     });
   },
+  patchVisibility: async (slug: string, visibility: "public" | "private", token: string) => {
+    return request(`${API}/capture`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ slug, visibility }),
+    });
+  },
 };

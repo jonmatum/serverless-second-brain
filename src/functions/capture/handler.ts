@@ -7,10 +7,10 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { validateCaptureRequest, generateSlug } from "../../shared/validation.js";
-import { getNode, putNode, putEdge, putAudit, listNodeSlugs, bumpCacheVersion } from "../../shared/dynamodb.js";
+import { getNode, putNode, putEdge, putAudit, listNodeSlugs, bumpCacheVersion, updateNodeVisibility } from "../../shared/dynamodb.js";
 import { putBody } from "../../shared/s3.js";
 import { classify } from "../../shared/bedrock.js";
-import { ValidationError, DuplicateError, BedrockError } from "../../shared/errors.js";
+import { ValidationError, DuplicateError, BedrockError, NotFoundError } from "../../shared/errors.js";
 import type { MetaItem, EdgeItem, AuditItem, CaptureResponse } from "../../shared/types.js";
 
 const CORS = {
@@ -20,6 +20,33 @@ const CORS = {
 };
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const method = event.httpMethod;
+  if (method === "PATCH") return handlePatch(event);
+  return handleCapture(event);
+};
+
+async function handlePatch(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  try {
+    const { slug, visibility } = JSON.parse(event.body ?? "{}");
+    if (!slug || !["public", "private"].includes(visibility)) {
+      throw new ValidationError("slug and visibility (public|private) are required");
+    }
+    const node = await getNode(slug);
+    if (!node) throw new NotFoundError(`Node '${slug}' not found`);
+
+    await updateNodeVisibility(slug, visibility);
+    await bumpCacheVersion();
+
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ slug, visibility }) };
+  } catch (error) {
+    if (error instanceof ValidationError) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: "validation_error", message: error.message }) };
+    if (error instanceof NotFoundError) return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: "not_found", message: error.message }) };
+    console.error("Patch error:", JSON.stringify(error));
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: "internal_error", message: "Internal server error" }) };
+  }
+}
+
+async function handleCapture(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     const input = validateCaptureRequest(JSON.parse(event.body ?? "{}"));
     const recentSlugs = await listNodeSlugs(20);

@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, ScanCommand, BatchGetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, ScanCommand, BatchGetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import type { MetaItem, EdgeItem, EmbedItem, AuditItem } from "./types.js";
 
 const client = new DynamoDBClient({});
@@ -153,5 +153,15 @@ export async function bumpCacheVersion(): Promise<void> {
   await ddb.send(new PutCommand({
     TableName: TABLE_NAME,
     Item: { PK: "SYSTEM#config", SK: "CACHE_VERSION", version: Date.now().toString() },
+  }));
+}
+
+export async function updateNodeVisibility(slug: string, visibility: "public" | "private"): Promise<void> {
+  await ddb.send(new UpdateCommand({
+    TableName: TABLE_NAME,
+    Key: { PK: `NODE#${slug}`, SK: "META" },
+    UpdateExpression: "SET visibility = :v, updated_at = :now",
+    ExpressionAttributeValues: { ":v": visibility, ":now": new Date().toISOString() },
+    ConditionExpression: "attribute_exists(PK)",
   }));
 }

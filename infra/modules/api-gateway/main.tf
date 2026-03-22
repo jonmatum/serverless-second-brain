@@ -201,6 +201,24 @@ resource "aws_api_gateway_integration" "capture_lambda" {
   uri                     = var.capture_lambda_invoke_arn
 }
 
+resource "aws_api_gateway_method" "capture_patch" {
+  rest_api_id      = aws_api_gateway_rest_api.this.id
+  resource_id      = aws_api_gateway_resource.capture.id
+  http_method      = "PATCH"
+  authorization    = var.enable_authorizer ? "CUSTOM" : "NONE"
+  authorizer_id    = var.enable_authorizer ? aws_api_gateway_authorizer.cognito[0].id : null
+  api_key_required = false
+}
+
+resource "aws_api_gateway_integration" "capture_patch_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.this.id
+  resource_id             = aws_api_gateway_resource.capture.id
+  http_method             = aws_api_gateway_method.capture_patch.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.capture_lambda_invoke_arn
+}
+
 resource "aws_lambda_permission" "capture_apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -364,7 +382,7 @@ resource "aws_api_gateway_integration_response" "capture_options_200" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,PATCH,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'${var.cors_allow_origin}'"
   }
 
@@ -598,8 +616,10 @@ resource "aws_api_gateway_deployment" "this" {
       aws_api_gateway_method.capture_post.id,
       aws_api_gateway_method.capture_post.authorization,
       aws_api_gateway_method.capture_post.api_key_required,
+      aws_api_gateway_method.capture_patch.id,
       aws_api_gateway_integration.health_mock.id,
       aws_api_gateway_integration.capture_lambda.id,
+      aws_api_gateway_integration.capture_patch_lambda.id,
       aws_api_gateway_integration.capture_options.id,
       aws_api_gateway_integration.health_options.id,
       var.search_lambda_invoke_arn,
@@ -618,6 +638,7 @@ resource "aws_api_gateway_deployment" "this" {
   depends_on = [
     aws_api_gateway_integration.health_mock,
     aws_api_gateway_integration.capture_lambda,
+    aws_api_gateway_integration.capture_patch_lambda,
     aws_api_gateway_integration.capture_options,
     aws_api_gateway_integration.health_options,
     aws_api_gateway_integration.search_lambda,
