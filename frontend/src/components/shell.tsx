@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3, Brain } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Sun, Moon, Network, Clock, BarChart3, Brain, Loader2 } from "lucide-react";
 import { PrefsProvider, usePrefs } from "@/lib/prefs";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { t, type DictKey } from "@/lib/i18n";
@@ -102,13 +102,14 @@ function LoginModal() {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email", locale)} required autoFocus
-            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.password", locale)} required
-            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)]" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.email", locale)} required autoFocus disabled={loading}
+            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.password", locale)} required disabled={loading}
+            className="w-full rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50" />
           {error && <p className="text-xs text-red-500">{error}</p>}
           <button type="submit" disabled={loading}
-            className="w-full rounded-lg bg-[var(--color-fg)] py-2 text-sm font-medium text-[var(--color-bg)] transition-opacity hover:opacity-80 disabled:opacity-50">
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-fg)] py-2 text-sm font-medium text-[var(--color-bg)] cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-wait">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             {loading ? t("auth.logging_in", locale) : t("auth.login", locale)}
           </button>
         </form>
