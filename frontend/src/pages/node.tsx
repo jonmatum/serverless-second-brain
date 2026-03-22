@@ -106,7 +106,7 @@ export default function NodePage() {
       )}
 
       {/* Chat editor */}
-      <NodeChat slug={slug} onUpdate={loadNode} />
+      <NodeChat slug={slug} node={node} onUpdate={loadNode} />
 
       {/* Bottom back link */}
       <Link to={`/${section}`} className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">

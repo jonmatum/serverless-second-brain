@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { t, localized as loc } from "@/lib/i18n";
+import type { DictKey } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 import { useAuth } from "@/lib/auth";
 
@@ -12,7 +13,7 @@ interface ChatMessage {
   action?: string;
 }
 
-export function NodeChat({ slug, onUpdate }: { slug: string; onUpdate: () => void }) {
+export function NodeChat({ slug, node, onUpdate }: { slug: string; node?: { status?: string; visibility?: string }; onUpdate: () => void }) {
   const { locale } = usePrefs();
   const { user, token, setShowLogin } = useAuth();
   const [open, setOpen] = useState(false);
@@ -20,6 +21,7 @@ export function NodeChat({ slug, onUpdate }: { slug: string; onUpdate: () => voi
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -56,12 +58,39 @@ export function NodeChat({ slug, onUpdate }: { slug: string; onUpdate: () => voi
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); }
   };
 
+  const quickActions: { key: DictKey; prompt: Record<string, string> }[] = [
+    { key: "node_chat.q.rewrite", prompt: { es: "Reescribe el contenido completo", en: "Rewrite the full content" } },
+    { key: "node_chat.q.add_section", prompt: { es: "Agrega una sección sobre ", en: "Add a section about " } },
+    { key: "node_chat.q.translate", prompt: { es: "Mejora la traducción al inglés", en: "Improve the Spanish translation" } },
+    { key: "node_chat.q.connect", prompt: { es: "Conecta con nodos relacionados", en: "Connect to related nodes" } },
+    ...(node?.status === "seed" ? [{ key: "node_chat.q.promote" as DictKey, prompt: { es: "Promueve a growing", en: "Promote to growing" } }] : []),
+    ...(node?.visibility === "private" ? [{ key: "node_chat.q.publish" as DictKey, prompt: { es: "Hazlo público", en: "Make it public" } }] : [{ key: "node_chat.q.hide" as DictKey, prompt: { es: "Hazlo privado", en: "Make it private" } }]),
+    { key: "node_chat.q.delete", prompt: { es: "Elimina este nodo", en: "Delete this node" } },
+  ];
+
+  function fillPrompt(action: typeof quickActions[number]) {
+    const p = action.prompt[locale] ?? action.prompt.en;
+    setText(p);
+    inputRef.current?.focus();
+  }
+
   return (
     <div className="space-y-3 rounded-lg border border-[var(--color-border)] p-4">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-[var(--color-muted)] uppercase tracking-wider">{t("node_chat.title", locale)}</span>
         <button onClick={() => setOpen(false)} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-fg)] cursor-pointer">✕</button>
       </div>
+
+      {messages.length === 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {quickActions.map((a) => (
+            <button key={a.key} onClick={() => fillPrompt(a)} disabled={loading}
+              className="rounded-full border border-[var(--color-border)] px-2.5 py-1 text-xs text-[var(--color-muted)] transition-colors hover:border-[var(--color-fg)] hover:text-[var(--color-fg)] disabled:opacity-50 cursor-pointer">
+              {t(a.key, locale)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {messages.length > 0 && (
         <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -78,7 +107,7 @@ export function NodeChat({ slug, onUpdate }: { slug: string; onUpdate: () => voi
       )}
 
       <div className="flex items-end gap-2">
-        <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} rows={2} disabled={loading}
+        <textarea ref={inputRef} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} rows={2} disabled={loading}
           className="min-h-[2.5rem] flex-1 resize-none rounded-lg border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-accent)] disabled:opacity-50"
           placeholder={t("node_chat.placeholder", locale)} />
         <button onClick={send} disabled={!text.trim() || loading} aria-label="Send"
