@@ -3,6 +3,7 @@ import { Search, X } from "lucide-react";
 import { api } from "@/lib/api";
 import type { SearchResponse } from "@/lib/types";
 import { NodeCard } from "@/components/node-card";
+import { CardListSkeleton } from "@/components/skeletons";
 import { Filters } from "@/components/filters";
 import { t, localized } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
@@ -54,7 +55,12 @@ export default function SearchPage() {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {data ? (
+      {loading ? (
+        <div className="space-y-2">
+          <div className={`h-3 w-32 animate-pulse rounded bg-[var(--color-border)]`} />
+          <CardListSkeleton count={4} />
+        </div>
+      ) : data ? (
         <div className="space-y-2">
           <p className="text-xs text-[var(--color-muted)]">{t("search.results", locale, { count: data.total, s: data.total !== 1 ? "s" : "", ms: data.took_ms })}</p>
           {data.results.map((r) => (
@@ -64,7 +70,7 @@ export default function SearchPage() {
             <p className="text-sm text-[var(--color-muted)]">{t("search.no_results", locale, { q: data.query })}</p>
           )}
         </div>
-      ) : !loading ? (
+      ) : (
         <div className="space-y-2 pt-2">
           <p className="text-xs text-[var(--color-muted)]">{t("search.suggestions", locale)}</p>
           <div className="flex flex-wrap gap-2">
@@ -76,7 +82,7 @@ export default function SearchPage() {
             ))}
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
