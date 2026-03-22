@@ -64,6 +64,10 @@ export default function NodePage() {
       {/* Body content */}
       {body ? (
         <MarkdownBody content={body} />
+      ) : node.word_count_es === 0 ? (
+        <div className="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-center text-sm text-[var(--color-muted)]">
+          {t("node.enriching", locale)}
+        </div>
       ) : (
         /* Bilingual summaries fallback when no body */
         <div className="grid gap-4 sm:grid-cols-2">

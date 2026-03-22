@@ -84,6 +84,7 @@ const dict = {
   "node.related": { es: "Nodos relacionados ({count})", en: "Related nodes ({count})" },
   "node.words": { es: "{count} palabras", en: "{count} words" },
   "node.empty": { es: "No se especific\u00f3 un nodo.", en: "No node specified." },
+  "node.enriching": { es: "Generando contenido…", en: "Generating content…" },
 
   // Node chat
   "node_chat.open": { es: "💬 Editar con chat", en: "💬 Edit with chat" },
