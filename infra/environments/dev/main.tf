@@ -58,6 +58,7 @@ locals {
     TABLE_NAME                 = module.dynamodb.table_name
     BUCKET_NAME                = module.s3_content.bucket_name
     BEDROCK_MODEL_ID           = var.bedrock_model_id
+    BEDROCK_CLASSIFY_MODEL_ID  = var.bedrock_classify_model_id
     BEDROCK_EMBEDDING_MODEL_ID = var.bedrock_embedding_model_id
     ENVIRONMENT                = var.environment
     NODE_TYPES                 = join(",", var.node_types)
@@ -78,7 +79,7 @@ module "capture_lambda" {
   function_name         = "${var.project_name}-${var.environment}-capture"
   handler               = "index.handler"
   memory_size           = 512
-  timeout               = 30
+  timeout               = 60
   environment_variables = merge(local.capture_env, {
     ENRICH_FUNCTION_NAME = "${var.project_name}-${var.environment}-enrich"
   })
@@ -107,6 +108,8 @@ module "enrich_lambda" {
     module.iam.s3_write_policy_arn,
     module.iam.bedrock_invoke_policy_arn,
   ]
+
+  enable_dlq = true
 }
 
 # Step function handlers — REMOVED: capture uses monolithic Lambda handler now (ADR-006 superseded)
@@ -210,6 +213,7 @@ module "connect_lambda" {
   }
 
   policy_arns = [module.iam.dynamodb_write_policy_arn]
+  enable_dlq  = true
 }
 
 module "flag_lambda" {
@@ -228,6 +232,8 @@ module "flag_lambda" {
     module.iam.dynamodb_read_policy_arn,
     module.iam.dynamodb_write_policy_arn,
   ]
+
+  enable_dlq = true
 }
 
 # --- Phase 4: Surfacing ---
@@ -257,6 +263,8 @@ module "surfacing_lambda" {
   policy_arns = [
     module.iam.dynamodb_read_policy_arn,
   ]
+
+  enable_dlq = true
 }
 
 resource "aws_iam_role_policy" "capture_invoke_enrich" {
@@ -371,6 +379,66 @@ module "agentcore_gateway" {
       }
     }
   }
+}
+
+# --- WAF (SEC-2) ---
+
+resource "aws_wafv2_web_acl" "api" {
+  name  = "${var.project_name}-${var.environment}-api-waf"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 1
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-${var.environment}-common-rules"
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 2
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+    visibility_config {
+      sampled_requests_enabled   = true
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-${var.environment}-bad-inputs"
+    }
+  }
+
+  visibility_config {
+    sampled_requests_enabled   = true
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.project_name}-${var.environment}-waf"
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "api" {
+  resource_arn = module.api_gateway.stage_arn
+  web_acl_arn  = aws_wafv2_web_acl.api.arn
 }
 
 # --- Observability (#14) ---

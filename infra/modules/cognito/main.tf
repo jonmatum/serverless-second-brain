@@ -36,6 +36,12 @@ resource "aws_cognito_user_pool" "this" {
   auto_verified_attributes = ["email"]
   username_attributes       = ["email"]
 
+  mfa_configuration = "OPTIONAL"
+
+  software_token_mfa_configuration {
+    enabled = true
+  }
+
   admin_create_user_config {
     allow_admin_create_user_only = !var.allow_self_signup
   }

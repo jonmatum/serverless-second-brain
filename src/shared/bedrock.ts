@@ -4,6 +4,7 @@ import { BedrockError } from "./errors.js";
 
 const bedrock = new BedrockRuntimeClient({});
 const MODEL_ID = process.env.BEDROCK_MODEL_ID!;
+const CLASSIFY_MODEL_ID = process.env.BEDROCK_CLASSIFY_MODEL_ID || MODEL_ID;
 const EMBEDDING_MODEL_ID = process.env.BEDROCK_EMBEDDING_MODEL_ID ?? "amazon.titan-embed-text-v2:0";
 const LANGUAGES = (process.env.LANGUAGES || "es,en").split(",");
 
@@ -98,7 +99,7 @@ ${langFields},
 - No filler: "game-changer", "increasingly important", "revolutionizing"`;
 
   const responseBody = await invokeWithRetry({
-    modelId: MODEL_ID,
+    modelId: CLASSIFY_MODEL_ID,
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
       max_tokens: 1024,

@@ -34,9 +34,15 @@ variable "edge_types" {
 }
 
 variable "bedrock_model_id" {
-  description = "Bedrock model ID for classification and reasoning"
+  description = "Bedrock model ID for body generation, chat, and reasoning"
   type        = string
   default     = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+}
+
+variable "bedrock_classify_model_id" {
+  description = "Bedrock model ID for classification (cheaper model)"
+  type        = string
+  default     = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
 }
 
 variable "bedrock_embedding_model_id" {

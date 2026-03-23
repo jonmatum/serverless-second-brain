@@ -747,3 +747,7 @@ output "stage_name" {
 output "authorizer_id" {
   value = var.enable_authorizer ? aws_api_gateway_authorizer.cognito[0].id : ""
 }
+
+output "stage_arn" {
+  value = aws_api_gateway_stage.this.arn
+}
