@@ -1,6 +1,6 @@
 # ADR-003: Authentication and Content Visibility Model
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-03-21
 **Context**: Issue #17, `.kiro/steering/api-spec.md`, `.kiro/steering/architecture.md`
 
