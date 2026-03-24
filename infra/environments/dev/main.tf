@@ -58,7 +58,6 @@ locals {
     TABLE_NAME                 = module.dynamodb.table_name
     BUCKET_NAME                = module.s3_content.bucket_name
     BEDROCK_MODEL_ID           = var.bedrock_model_id
-    BEDROCK_CLASSIFY_MODEL_ID  = var.bedrock_classify_model_id
     BEDROCK_EMBEDDING_MODEL_ID = var.bedrock_embedding_model_id
     ENVIRONMENT                = var.environment
     NODE_TYPES                 = join(",", var.node_types)
