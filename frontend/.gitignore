@@ -1,3 +1,7 @@
 node_modules
 dist
-.env.local
+
+# Environment — never commit real resource IDs
+.env
+.env.*
+!.env.example
